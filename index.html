@@ -114,8 +114,9 @@
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
                     <span>IN PROGRESS</span>
                 </div>
-                <div class="text-[11px] text-tactical-muted">
-                    <i class="fa-solid fa-sync text-xs mr-1 animate-spin" id="wikiLoadingIcon"></i> 최신 시즌 위키 보상 연동중
+                <div class="text-[11px] text-tactical-muted flex items-center gap-1.5">
+                    <i class="fa-solid fa-sync text-xs" id="wikiLoadingIcon"></i>
+                    <span id="wikiStatusText">위키 연동 준비 중</span>
                 </div>
             </div>
         </section>
@@ -207,53 +208,89 @@
             { id: 12, name: '연구실', docs: ['user', 'med'] }
         ];
 
+        // 위키 차단 시 사용할 예비 기본 보상 목록
+        const FALLBACK_REWARDS = [
+            { id: 'reward_1', name: 'Standard Reward 1', img: '', defaultReq: 10 },
+            { id: 'reward_2', name: 'Standard Reward 2', img: '', defaultReq: 15 },
+            { id: 'reward_3', name: 'Standard Reward 3', img: '', defaultReq: 20 }
+        ];
+
         let selectedMapId = null;
         let docState = {};
-        let parsedRewards = []; // 위키에서 수집한 최신 시즌 보상 목록
+        let parsedRewards = [];
 
-        // 1. 위키에서 최신 시즌 데이터 동적 파싱
+        // 1. 위키 데이터 가져오기 (다중 프록시 fallback 지원)
         async function fetchLatestSeasonRewards() {
             const wikiUrl = 'https://escapefromtarkov.fandom.com/wiki/BattlePass';
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(wikiUrl)}`;
             const loadingIcon = document.getElementById('wikiLoadingIcon');
+            const statusText = document.getElementById('wikiStatusText');
+
+            if (loadingIcon) loadingIcon.classList.add('animate-spin');
+            if (statusText) statusText.innerText = '위키 최신 데이터 파싱 중...';
+
+            let htmlText = '';
+            
+            // 프록시 목록 (순서대로 시도)
+            const proxies = [
+                `https://corsproxy.io/?${encodeURIComponent(wikiUrl)}`,
+                `https://api.allorigins.win/get?url=${encodeURIComponent(wikiUrl)}`
+            ];
+
+            for (const proxy of proxies) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6초 타임아웃
+
+                    const response = await fetch(proxy, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+
+                    if (response.ok) {
+                        if (proxy.includes('allorigins')) {
+                            const jsonData = await response.json();
+                            htmlText = jsonData.contents || '';
+                        } else {
+                            htmlText = await response.text();
+                        }
+                        if (htmlText && htmlText.length > 500) break; // 성공 시 루프 탈출
+                    }
+                } catch (e) {
+                    console.warn(`Proxy fetch failed: ${proxy}`, e);
+                }
+            }
 
             try {
-                if (loadingIcon) loadingIcon.classList.add('animate-spin');
-                const response = await fetch(proxyUrl);
-                const data = await response.json();
-                
-                if (!data.contents) return;
+                if (!htmlText) throw new Error('모든 프록시 응답 실패');
 
                 const parser = new DOMParser();
-                const doc = parser.parseFromString(data.contents, 'text/html');
+                const doc = parser.parseFromString(htmlText, 'text/html');
 
-                // 'Season' 키워드가 포함된 요소 탐색하여 최신 시즌 영역 감지
-                const headings = Array.from(doc.querySelectorAll('h2, h3, h4, .mw-heading'));
-                const seasonHeadings = headings.filter(el => el.textContent.toLowerCase().includes('season'));
-                
-                let targetScope = doc;
-                if (seasonHeadings.length > 0) {
-                    const latestSeason = seasonHeadings[seasonHeadings.length - 1];
-                    targetScope = latestSeason.parentElement || doc;
+                // 테이블 탐색 (wikitable 클래스 추출)
+                const rewardTables = doc.querySelectorAll('table.wikitable');
+                let targetTable = null;
+
+                if (rewardTables.length > 0) {
+                    // 가장 아래쪽에 위치한(최신 시즌) 테이블 선택
+                    targetTable = rewardTables[rewardTables.length - 1];
                 }
 
-                // 해당 영역 하위의 보상 wikitable 추출
-                const rewardTable = targetScope.querySelector('table.wikitable');
-                if (!rewardTable) return;
+                if (!targetTable) throw new Error('보상 테이블을 찾을 수 없음');
 
-                const rows = rewardTable.querySelectorAll('tr');
+                const rows = targetTable.querySelectorAll('tr');
                 parsedRewards = [];
 
                 rows.forEach((row, index) => {
-                    if (index === 0) return; // 테이블 헤더 제외
-
-                    const cells = row.querySelectorAll('td, th');
+                    const cells = row.querySelectorAll('td');
                     if (cells.length >= 2) {
                         const imgEl = cells[0].querySelector('img');
-                        const imgSrc = imgEl ? (imgEl.getAttribute('data-src') || imgEl.getAttribute('src')) : '';
-                        
-                        const itemName = cells[0].textContent.trim();
-                        const reqCount = parseInt(cells[1].textContent.replace(/[^0-9]/g, '')) || 10;
+                        let imgSrc = '';
+                        if (imgEl) {
+                            imgSrc = imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || '';
+                            if (imgSrc.startsWith('//')) imgSrc = 'https:' + imgSrc;
+                        }
+
+                        const itemName = cells[0].textContent.replace(/\n/g, ' ').trim();
+                        const reqMatch = cells[1].textContent.match(/\d+/);
+                        const reqCount = reqMatch ? parseInt(reqMatch[0]) : 10;
 
                         if (itemName) {
                             parsedRewards.push({
@@ -266,7 +303,26 @@
                     }
                 });
 
-                // state 초기 설정 (기존 저장값 없으면 파싱된 수량 적용)
+                if (parsedRewards.length === 0) throw new Error('파싱된 항목 없음');
+
+                // 성공 시 캐시 저장
+                localStorage.setItem('cached_wiki_rewards', JSON.stringify(parsedRewards));
+                if (statusText) statusText.innerText = '위키 데이터 연동 성공';
+
+            } catch (error) {
+                console.warn('Wiki fetching error:', error);
+                if (statusText) statusText.innerText = '위키 연결 실패 (캐시/기본 데이터 사용)';
+
+                const cached = localStorage.getItem('cached_wiki_rewards');
+                if (cached) {
+                    parsedRewards = JSON.parse(cached);
+                } else {
+                    parsedRewards = FALLBACK_REWARDS;
+                }
+            } finally {
+                if (loadingIcon) loadingIcon.classList.remove('animate-spin');
+
+                // docState 초기 할당
                 parsedRewards.forEach(reward => {
                     if (!docState[reward.id]) {
                         docState[reward.id] = { req: reward.defaultReq, own: 0 };
@@ -275,10 +331,6 @@
 
                 renderRewardGrid();
                 saveToStorage();
-            } catch (error) {
-                console.error('Wiki rewards fetching failed:', error);
-            } finally {
-                if (loadingIcon) loadingIcon.classList.remove('animate-spin');
             }
         }
 
@@ -297,8 +349,8 @@
                 card.innerHTML = `
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center space-x-2.5 overflow-hidden">
-                            ${reward.img ? `<img src="${reward.img}" alt="${reward.name}" class="w-8 h-8 object-contain shrink-0">` : `<div class="w-8 h-8 rounded bg-tactical-accent/10 text-tactical-accent flex items-center justify-center font-bold">BP</div>`}
-                            <span class="font-bold text-sm text-gray-200 truncate">${reward.name}</span>
+                            ${reward.img ? `<img src="${reward.img}" alt="${reward.name}" class="w-8 h-8 object-contain shrink-0" onerror="this.style.display='none'">` : `<div class="w-8 h-8 rounded bg-tactical-accent/10 text-tactical-accent flex items-center justify-center font-bold text-xs">BP</div>`}
+                            <span class="font-bold text-sm text-gray-200 truncate" title="${reward.name}">${reward.name}</span>
                         </div>
                     </div>
                     <div class="flex items-center justify-between bg-black/40 rounded-lg p-1.5 border border-tactical-border/60">
@@ -323,7 +375,6 @@
             updateCalculations();
         }
 
-        // 3. 수량 변경 핸들러 (보상 영역)
         function adjustRewardReq(id, delta) {
             if (!docState[id]) docState[id] = { req: 0, own: 0 };
             const currentVal = docState[id].req;
@@ -347,14 +398,12 @@
             saveToStorage();
         }
 
-        // 기본 상태 초기화
         function initData() {
             DOCUMENTS.forEach(doc => {
                 docState[doc.id] = { req: doc.defaultReq, own: 0 };
             });
         }
 
-        // LocalStorage 관리
         function saveToStorage() {
             try {
                 localStorage.setItem('battlepass_doc_state', JSON.stringify(docState));
@@ -382,7 +431,6 @@
             return false;
         }
 
-        // 맵 리스트 렌더링
         function renderMapList() {
             const container = document.getElementById('mapListContainer');
             container.innerHTML = '';
@@ -440,7 +488,6 @@
             }
         }
 
-        // 보유 문서 카드 렌더링
         function renderGrids() {
             const ownGrid = document.getElementById('ownedDocGrid');
             ownGrid.innerHTML = '';
@@ -512,7 +559,6 @@
             saveToStorage();
         }
 
-        // 전체 계산 로직
         function updateCalculations() {
             let totalReq = 0;
             let totalOwn = 0;
@@ -558,7 +604,6 @@
                 summaryGrid.appendChild(itemBox);
             });
 
-            // 대시보드 진행률 업데이트
             let percent = totalReq > 0 ? Math.round((Math.min(totalOwn, totalReq) / totalReq) * 100) : 100;
 
             document.getElementById('overallPercent').innerText = `${percent}%`;
@@ -594,7 +639,6 @@
             }
         }
 
-        // 최초 페이지 로드 시 실행
         window.onload = function() {
             initData();
             loadFromStorage();

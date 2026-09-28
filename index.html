@@ -243,9 +243,9 @@
         let docState = {};
         let parsedPagesData = [];
 
-        // 1. 위키 데이터 가져오기 (Page 구분 파싱)
+        // 1. 위키 데이터 가져오기 (다중 우회 프록시 서버 연동 보강)
         async function fetchLatestSeasonRewards() {
-            const wikiUrl = 'https://escapefromtarkov.fandom.com/wiki/BattlePass';
+            const targetWikiUrl = 'https://escapefromtarkov.fandom.com/wiki/BattlePass';
             const loadingIcon = document.getElementById('wikiLoadingIcon');
             const statusText = document.getElementById('wikiStatusText');
 
@@ -254,15 +254,17 @@
 
             let htmlText = '';
             
+            // 다양한 무료 CORS 우회 프록시 엔드포인트
             const proxies = [
-                `https://corsproxy.io/?${encodeURIComponent(wikiUrl)}`,
-                `https://api.allorigins.win/get?url=${encodeURIComponent(wikiUrl)}`
+                `https://api.allorigins.win/get?url=${encodeURIComponent(targetWikiUrl)}`,
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetWikiUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(targetWikiUrl)}`
             ];
 
             for (const proxy of proxies) {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 6000);
+                    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8초 타임아웃
 
                     const response = await fetch(proxy, { signal: controller.signal });
                     clearTimeout(timeoutId);
@@ -274,7 +276,7 @@
                         } else {
                             htmlText = await response.text();
                         }
-                        if (htmlText && htmlText.length > 500) break;
+                        if (htmlText && htmlText.length > 1000) break;
                     }
                 } catch (e) {
                     console.warn(`Proxy fetch failed: ${proxy}`, e);
@@ -288,7 +290,7 @@
                 const doc = parser.parseFromString(htmlText, 'text/html');
 
                 const rewardTables = doc.querySelectorAll('table.wikitable');
-                if (rewardTables.length === 0) throw new Error('보상 테이블을 찾을 수 없음');
+                if (rewardTables.length === 0) throw new Error('위키 테이블을 찾을 수 없음');
 
                 const targetTable = rewardTables[rewardTables.length - 1];
                 const rows = targetTable.querySelectorAll('tr');
@@ -352,14 +354,14 @@
                     }
                 });
 
-                if (parsedPagesData.length === 0) throw new Error('파싱된 항목 없음');
+                if (parsedPagesData.length === 0) throw new Error('파싱된 보상 데이터 없음');
 
                 localStorage.setItem('cached_wiki_pages', JSON.stringify(parsedPagesData));
-                if (statusText) statusText.innerText = '위키 데이터 연동 성공';
+                if (statusText) statusText.innerText = '위키 최신 데이터 실시간 연동 성공';
 
             } catch (error) {
                 console.warn('Wiki fetching error:', error);
-                if (statusText) statusText.innerText = '위키 연결 실패 (캐시/기본 데이터 사용)';
+                if (statusText) statusText.innerText = '위키 차단됨 (기본 데이터로 구동)';
 
                 const cached = localStorage.getItem('cached_wiki_pages');
                 if (cached) {
@@ -382,7 +384,7 @@
             }
         }
 
-        // 2. 페이지별 UI 렌더링 (tarkovdocscalc.wiki 형태)
+        // 2. 페이지별 UI 렌더링
         function renderPagesUI() {
             const container = document.getElementById('pagesContainer');
             if (!container || parsedPagesData.length === 0) return;
@@ -403,7 +405,7 @@
                             </div>
                             <div class="w-full h-24 bg-black/50 rounded flex items-center justify-center overflow-hidden border border-black/30 p-1">
                                 ${item.img 
-                                    ? `<img src="${item.img}" alt="${item.name}" class="object-contain h-full w-full" onerror="this.onerror=null; this.src='https://via.placeholder.com/100?text=No+Image';">` 
+                                    ? `<img src="${item.img}" alt="${item.name}" class="object-contain h-full w-full" onerror="this.onerror=null; this.src='https://via.placeholder.com/100?text=Item';">` 
                                     : `<i class="fa-solid fa-box text-gray-600 text-2xl"></i>`}
                             </div>
                             <div class="flex items-center justify-between bg-black/40 rounded-lg p-1 border border-tactical-border/60">
@@ -632,7 +634,6 @@
             let totalReq = 0;
             let totalOwn = 0;
 
-            // 1. 위키 보상들의 총 필요 수량 합산
             parsedPagesData.forEach(pg => {
                 pg.rewards.forEach(reward => {
                     const req = docState[reward.id] ? docState[reward.id].req : reward.defaultReq;
@@ -640,7 +641,6 @@
                 });
             });
 
-            // 2. 보유 문서의 총 수량 합산
             DOCUMENTS.forEach(doc => {
                 const own = docState[doc.id] ? docState[doc.id].own : 0;
                 totalOwn += own;
@@ -648,7 +648,6 @@
 
             const totalMissing = Math.max(0, totalReq - totalOwn);
 
-            // 3. 문서별 상태 요약 렌더링
             const summaryGrid = document.getElementById('summaryGrid');
             summaryGrid.innerHTML = '';
 
@@ -704,21 +703,29 @@
             }
         }
 
+        // 연결 실패 시 표시될 시즌 기본 페이지 보상 데이터
         function getFallbackPagesData() {
             return [
                 {
                     page: 1,
                     rewards: [
-                        { id: 'fb_1', name: 'Marked dogtag', img: '', defaultReq: 1 },
-                        { id: 'fb_2', name: 'TarCoin X50', img: '', defaultReq: 3 },
-                        { id: 'fb_3', name: 'BURN poster', img: '', defaultReq: 3 }
+                        { id: 'fb_p1_1', name: 'Marked dogtag', img: 'https://assets.tarkov.dev/5c0d5e4486f7704521415e92-icon.webp', defaultReq: 1 },
+                        { id: 'fb_p1_2', name: 'TarCoin X50', img: 'https://assets.tarkov.dev/665efb318f780824b20a024c-icon.webp', defaultReq: 3 },
+                        { id: 'fb_p1_3', name: 'BURN poster', img: 'https://assets.tarkov.dev/5448b2e34fa2d8a02e8b4567-icon.webp', defaultReq: 3 }
                     ]
                 },
                 {
                     page: 2,
                     rewards: [
-                        { id: 'fb_4', name: 'Gentex Ops-Core SOTR', img: '', defaultReq: 4 },
-                        { id: 'fb_5', name: 'Red Hawaii', img: '', defaultReq: 7 }
+                        { id: 'fb_p2_1', name: 'Ops-Core SOTR', img: 'https://assets.tarkov.dev/5a15a81886f77014022a1012-icon.webp', defaultReq: 4 },
+                        { id: 'fb_p2_2', name: 'Red Hawaii Shirt', img: 'https://assets.tarkov.dev/5c0e3f8486f770335e3966a3-icon.webp', defaultReq: 7 }
+                    ]
+                },
+                {
+                    page: 3,
+                    rewards: [
+                        { id: 'fb_p3_1', name: 'Secure Container Gamma', img: 'https://assets.tarkov.dev/5857a8bc245a772bad15db29-icon.webp', defaultReq: 15 },
+                        { id: 'fb_p3_2', name: 'T-7 Thermal Goggles', img: 'https://assets.tarkov.dev/5c05580686f770138513b243-icon.webp', defaultReq: 20 }
                     ]
                 }
             ];

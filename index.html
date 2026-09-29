@@ -758,14 +758,14 @@
 
     // 표시 순서: 회계 - PMC - 프로젝트 - 설계도 - 테스트 - 사용자 - 의료 - 장비
     const DOCS_DATA = {
-      Fin:  { name: "회계 문서",     en: "Financial", file: "FD.webp" },
-      PMC:  { name: "PMC 인사 기록", en: "PMC personnel",    file: "PMC.webp" },
-      Proj: { name: "프로젝트 문서", en: "Project",   file: "PD.webp" },
-      Blue: { name: "설계도",        en: "Blueprints",          file: "BP.webp" },
-      Test: { name: "테스트 문서",   en: "Test",      file: "TD.webp" },
-      User: { name: "사용자 문서",   en: "User",      file: "UD.webp" },
-      Med:  { name: "의료 문서",     en: "Medical",   file: "MD.webp" },
-      Tech: { name: "장비 문서",     en: "Technical", file: "Tech.webp" }
+      Fin:  { name: "회계 문서", short: "회계",     en: "Financial", file: "FD.webp" },
+      PMC:  { name: "PMC 인사 기록", short: "PMC", en: "PMC personnel",    file: "PMC.webp" },
+      Proj: { name: "프로젝트 문서", short: "프로젝트", en: "Project",   file: "PD.webp" },
+      Blue: { name: "설계도", short: "설계도",        en: "Blueprints",          file: "BP.webp" },
+      Test: { name: "테스트 문서", short: "테스트",   en: "Test",      file: "TD.webp" },
+      User: { name: "사용자 문서", short: "사용자",   en: "User",      file: "UD.webp" },
+      Med:  { name: "의료 문서", short: "의료",     en: "Medical",   file: "MD.webp" },
+      Tech: { name: "장비 문서", short: "장비",     en: "Technical", file: "Tech.webp" }
     };
 
     const MAPS_DATA = [
@@ -1489,7 +1489,7 @@ function setupHorizontalWheel() {
         .map(code => `
           <span class="cost-tag">
             <img src="${DOCS_DATA[code].file}" onerror="this.style.display='none'">
-            ${costs[code]} ${code}
+            ${costs[code]} ${DOCS_DATA[code].short}
           </span>
         `)
         .join("");

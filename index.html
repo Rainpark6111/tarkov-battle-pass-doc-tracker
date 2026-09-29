@@ -673,8 +673,8 @@
           const tds = tr.querySelectorAll("td");
           if (tds.length < 2) return;
 
-          const rewardName = tds[1]?.textContent?.trim() || `Reward ${idx}`;
-          const imgEl = tds[0]?.querySelector("img");
+          const rewardName = tds[2]?.textContent?.trim() || `Reward ${idx}`;
+          const imgEl = tds[1]?.querySelector("img");
           const iconSrc = imgEl ? (imgEl.getAttribute("data-src") || imgEl.src) : "";
           const priceText = tds[tds.length - 1]?.textContent?.trim() || "1";
           const price = parseInt(priceText) || 1;

@@ -61,29 +61,41 @@
     .season-name {
       color: #ffffff;
       font-weight: 700;
+    
+      /* 글자 자체를 선명하게 */
+      opacity: 1;
+      filter: none;
+    
+      /* 강하지만 글자를 뭉개지 않는 근접형 광원 */
       text-shadow:
-        0 0 4px rgba(255, 255, 255, 0.95),
-        0 0 8px rgba(255, 255, 255, 0.85),
-        0 0 16px rgba(255, 255, 255, 0.65),
-        0 0 28px rgba(255, 255, 255, 0.4);
-      animation: seasonGlow 2s ease-in-out infinite alternate;
+        0 0 2px #ffffff,
+        0 0 4px #ffffff,
+        0 0 7px rgba(255, 255, 255, 0.95),
+        0 0 12px rgba(255, 255, 255, 0.8),
+        0 0 18px rgba(255, 255, 255, 0.55);
+    
+      animation: seasonGlow 1.8s ease-in-out infinite alternate;
     }
     
     @keyframes seasonGlow {
       from {
+        color: #ffffff;
         text-shadow:
-          0 0 4px rgba(255, 255, 255, 0.8),
-          0 0 8px rgba(255, 255, 255, 0.7),
-          0 0 14px rgba(255, 255, 255, 0.5),
-          0 0 22px rgba(255, 255, 255, 0.3);
+          0 0 2px #ffffff,
+          0 0 4px #ffffff,
+          0 0 7px rgba(255, 255, 255, 0.95),
+          0 0 12px rgba(255, 255, 255, 0.8),
+          0 0 18px rgba(255, 255, 255, 0.55);
       }
     
       to {
+        color: #ffffff;
         text-shadow:
-          0 0 5px rgba(255, 255, 255, 1),
-          0 0 10px rgba(255, 255, 255, 0.95),
-          0 0 20px rgba(255, 255, 255, 0.8),
-          0 0 32px rgba(255, 255, 255, 0.55);
+          0 0 2px #ffffff,
+          0 0 5px #ffffff,
+          0 0 8px #ffffff,
+          0 0 14px rgba(255, 255, 255, 0.95),
+          0 0 22px rgba(255, 255, 255, 0.7);
       }
     }
 

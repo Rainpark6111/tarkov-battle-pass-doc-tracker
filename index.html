@@ -1,759 +1,867 @@
 <!DOCTYPE html>
-<html lang="ko" class="dark">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarkov BattlePass Docs Tracker</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        tactical: {
-                            bg: '#0f1115',
-                            card: '#161920',
-                            item: '#181c24',
-                            border: '#2a2f3a',
-                            accent: '#3b82f6',
-                            olive: '#4b5563',
-                            muted: '#9ca3af',
-                            text: '#e5e7eb'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #0b0c10;
-            color: #c5c6c7;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-        .tactical-glass {
-            background: rgba(22, 25, 32, 0.85);
-            backdrop-filter: blur(8px);
-        }
-        .page-column {
-            background: #11141a;
-            border: 1px solid #232730;
-            border-radius: 8px;
-            width: 260px;
-            flex-shrink: 0;
-        }
-        .reward-card {
-            background: #181c24;
-            border: 1px solid #2a303c;
-            border-radius: 6px;
-        }
-        .map-item-active {
-            background-color: rgba(59, 130, 246, 0.15) !important;
-            border-color: #3b82f6 !important;
-        }
-        .doc-highlight {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
-        }
-        /* 스크롤바 스타일 */
-        ::-webkit-scrollbar {
-            height: 8px;
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0b0c10;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #232730;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3b82f6;
-        }
-        /* Number Input Spinner Removal */
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tarkov Battle Pass Tracker</title>
+  <style>
+    :root {
+      --bg-color: #121417;
+      --panel-bg: #1e2228;
+      --card-bg: #282c34;
+      --border-color: #3b404a;
+      --accent-color: #e5b35c;
+      --highlight-color: #ff9800;
+      --text-color: #e0e0e0;
+      --text-dim: #9e9e9e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header (1번) */
+    header {
+      background-color: var(--panel-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      height: 60px;
+      flex-shrink: 0;
+    }
+
+    header img {
+      height: 35px;
+      object-fit: contain;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--accent-color);
+      letter-spacing: 0.5px;
+    }
+
+    /* Main Content Layout */
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Left Sidebar: Map Selector (2번) */
+    .sidebar {
+      width: 280px;
+      background-color: var(--panel-bg);
+      border-right: 1px solid var(--border-color);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar h2 {
+      font-size: 1rem;
+      color: var(--accent-color);
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 5px;
+    }
+
+    .map-card {
+      background-color: var(--card-bg);
+      border: 2px solid transparent;
+      border-radius: 6px;
+      padding: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .map-card:hover {
+      border-color: var(--border-color);
+      background-color: #323741;
+    }
+
+    .map-card.active, .map-card.highlight {
+      border-color: var(--highlight-color);
+      box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
+      background-color: #3a3226;
+    }
+
+    .map-name {
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 5px;
+    }
+
+    .map-docs {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .doc-badge {
+      background-color: rgba(255, 255, 255, 0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Center Content */
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Central Roadmap Scroll (3번) */
+    .roadmap-scroll {
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+      background-color: #16181d;
+    }
+
+    .roadmap-column {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      width: 220px;
+      min-width: 220px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .column-header {
+      background-color: var(--card-bg);
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    .column-body {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .reward-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .reward-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .reward-title {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 150px;
+    }
+
+    .edit-btn {
+      cursor: pointer;
+      color: #ff5252;
+      font-size: 0.9rem;
+      transition: transform 0.1s;
+    }
+
+    .edit-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .reward-img-container {
+      width: 100%;
+      height: 100px;
+      background-color: rgba(0,0,0,0.3);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .reward-img-container img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .reward-costs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .cost-tag {
+      font-size: 0.75rem;
+      background-color: #121417;
+      border: 1px solid var(--border-color);
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Bottom Panel: Inventory & Requirements (4번) */
+    .bottom-panel {
+      height: 180px;
+      background-color: var(--panel-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 12px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 10px;
+      height: 100%;
+    }
+
+    .doc-item {
+      background-color: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .doc-item.highlight {
+      border-color: var(--highlight-color);
+      box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+      background-color: #3a3226;
+    }
+
+    .doc-icon-title {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .doc-icon-title img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+
+    .doc-name {
+      font-size: 0.75rem;
+      color: var(--text-color);
+      text-align: center;
+    }
+
+    .doc-counters {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      margin-top: 4px;
+    }
+
+    .doc-input {
+      width: 40px;
+      background-color: #121417;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      text-align: center;
+      border-radius: 3px;
+      font-size: 0.75rem;
+    }
+
+    .doc-req {
+      color: #ff5252;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Modal (3번 편집 모달) */
+    .modal-overlay {
+      position: fixed;
+      top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--accent-color);
+      border-radius: 8px;
+      padding: 20px;
+      width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .modal h3 {
+      color: var(--accent-color);
+      font-size: 1.1rem;
+      text-align: center;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .modal-input-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--card-bg);
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    .modal-input-group label {
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .modal-input-group input {
+      width: 45px;
+      background-color: #121417;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      text-align: center;
+      padding: 2px;
+      border-radius: 3px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.8rem;
+    }
+
+    .btn-save { background-color: #4caf50; color: #fff; }
+    .btn-cancel { background-color: #f44336; color: #fff; }
+    .btn-reset { background-color: #555; color: #fff; }
+  </style>
 </head>
-<body class="min-h-screen p-4 md:p-6 text-tactical-text">
+<body>
 
-    <div class="max-w-[1920px] mx-auto space-y-6">
+  <!-- 1. 좌상단 로고 및 제목 -->
+  <header>
+    <a href="https://www.escapefromtarkov.com/" target="_blank">
+      <img src="https://www.escapefromtarkov.com/build-eft-site/_nuxt/logo.WO0wViWU.webp" alt="Escape from Tarkov">
+    </a>
+    <h1>Tarkov Battle Pass Tracker</h1>
+  </header>
 
-        <!-- 헤더 섹션 -->
-        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-tactical-border pb-5">
-            <div>
-                <div class="flex items-center space-x-3">
-                    <span class="p-2 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                        <i class="fa-solid fa-scroll text-xl"></i>
-                    </span>
-                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white">TARKOV BATTLEPASS TRACKER</h1>
-                </div>
-                <p class="text-xs text-tactical-muted mt-1">시즌 데이터 자동 연동 & 필요 문서 현황 계산기 (페이지별 컬럼 UI)</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <button onclick="fetchLatestSeasonRewards()" class="px-3.5 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-2">
-                    <i class="fa-solid fa-arrows-rotate"></i> 데이터 새로고침
-                </button>
-                <button onclick="resetAll()" class="px-3.5 py-2 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold transition flex items-center gap-2">
-                    <i class="fa-solid fa-rotate-right"></i> 초기화
-                </button>
-            </div>
-        </header>
-
-        <!-- 진행 상황 대시보드 -->
-        <section class="tactical-glass border border-tactical-border rounded-xl p-5 shadow-xl">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div class="w-full md:w-1/3 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold uppercase tracking-wider text-tactical-muted">전체 달성률</span>
-                        <span id="overallPercent" class="text-2xl font-black font-mono text-tactical-accent">0%</span>
-                    </div>
-                    <div class="w-full bg-black/50 h-3 rounded-full overflow-hidden p-0.5 border border-tactical-border">
-                        <div id="overallProgressBar" class="bg-gradient-to-r from-blue-600 to-indigo-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-4 w-full md:w-2/3 border-t md:border-t-0 md:border-l border-tactical-border pt-4 md:pt-0 md:pl-6 text-center">
-                    <div class="bg-black/30 p-3 rounded-lg border border-tactical-border/50">
-                        <span class="text-[11px] text-tactical-muted block mb-1">보유 문서</span>
-                        <span id="totalCurrent" class="text-xl font-bold font-mono text-white">0</span>
-                    </div>
-                    <div class="bg-black/30 p-3 rounded-lg border border-tactical-border/50">
-                        <span class="text-[11px] text-tactical-muted block mb-1">총 필요 문서</span>
-                        <span id="totalRequired" class="text-xl font-bold font-mono text-white">0</span>
-                    </div>
-                    <div class="bg-black/30 p-3 rounded-lg border border-tactical-border/50">
-                        <span class="text-[11px] text-tactical-muted block mb-1">부족한 문서</span>
-                        <span id="totalMissing" class="text-xl font-bold font-mono text-amber-400">0개</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 상태 배지 -->
-            <div class="mt-4 pt-3 border-t border-tactical-border/40 flex justify-between items-center">
-                <div id="statusBadge" class="px-2.5 py-1 rounded text-xs font-bold font-mono border bg-amber-500/10 text-amber-400 border-amber-500/30 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                    <span>IN PROGRESS</span>
-                </div>
-                <div class="text-[11px] text-tactical-muted flex items-center gap-1.5">
-                    <i class="fa-solid fa-sync text-xs" id="wikiLoadingIcon"></i>
-                    <span id="wikiStatusText">데이터 연동 준비 중</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- 메인 콘텐츠 영역 -->
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-            <!-- 좌측: 맵 선택 목록 -->
-            <aside class="space-y-3">
-                <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-map text-tactical-accent"></i> 맵별 드랍 문서
-                </h2>
-                <div id="mapListContainer" class="space-y-2 max-h-[700px] overflow-y-auto pr-1">
-                    <!-- JS Dynamically Populated -->
-                </div>
-            </aside>
-
-            <!-- 우측: 문서 관리 및 보상 영역 -->
-            <main class="lg:col-span-3 space-y-6 overflow-hidden">
-
-                <!-- 1. 페이지별 컬럼 보상 섹션 -->
-                <section class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-trophy text-amber-400"></i> 페이지별 배틀패스 보상 현황
-                        </h2>
-                    </div>
-                    <div class="w-full overflow-x-auto pb-2">
-                        <div id="pagesContainer" class="flex gap-4 min-w-max">
-                            <div class="text-xs text-tactical-muted p-4">데이터를 불러오는 중입니다...</div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- 2. 보유 문서 관리 섹션 -->
-                <section class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-boxes-stacked text-green-400"></i> 현재 보유 문서
-                        </h2>
-                        <button onclick="clearAllOwned()" class="text-xs text-tactical-muted hover:text-white transition">
-                            보유 수량 0으로 초기화
-                        </button>
-                    </div>
-                    <div id="ownedDocGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                        <!-- JS Dynamically Populated -->
-                    </div>
-                </section>
-
-                <!-- 3. 부족 수량 요약 뷰 -->
-                <section class="tactical-glass border border-tactical-border rounded-xl p-4 space-y-3">
-                    <h2 class="text-xs font-bold text-tactical-muted uppercase tracking-wider">문서별 파밍 현황 요약</h2>
-                    <div id="summaryGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <!-- JS Dynamically Populated -->
-                    </div>
-                </section>
-
-            </main>
-        </div>
+  <div class="main-container">
+    <!-- 2. 좌중단 : 맵 선택 -->
+    <div class="sidebar" id="mapList">
+      <h2>맵 목록</h2>
+      <!-- JS로 동적 생성 -->
     </div>
 
-    <!-- 스크립트 로직 -->
-    <script>
-        // 8가지 문서 목록
-        const DOCUMENTS = [
-            { id: 'acc', name: '회계문서', icon: 'fa-file-invoice-dollar', defaultReq: 10 },
-            { id: 'pmc', name: 'PMC 인사기록', icon: 'fa-id-card-clip', defaultReq: 10 },
-            { id: 'proj', name: '프로젝트 문서', icon: 'fa-folder-open', defaultReq: 10 },
-            { id: 'blue', name: '설계도', icon: 'fa-compass-drafting', defaultReq: 10 },
-            { id: 'test', name: '테스트 문서', icon: 'fa-vial-circle-check', defaultReq: 10 },
-            { id: 'user', name: '사용자 문서', icon: 'fa-book', defaultReq: 10 },
-            { id: 'med', name: '의료 문서', icon: 'fa-notes-medical', defaultReq: 10 },
-            { id: 'eqp', name: '장비 문서', icon: 'fa-toolbox', defaultReq: 10 }
-        ];
+    <!-- 중앙 영역 -->
+    <div class="content-area">
+      <!-- 3. 중앙상단 : 배틀패스 보상 로드맵 스크롤 -->
+      <div class="roadmap-scroll" id="roadmapContainer">
+        <!-- JS로 동적 생성 -->
+      </div>
 
-        // 12개 맵 및 드랍 문서
-        const MAPS = [
-            { id: 1, name: '세관', docs: ['acc', 'proj'] },
-            { id: 2, name: '타르코프 시내', docs: ['acc', 'user'] },
-            { id: 3, name: '인터체인지', docs: ['acc', 'blue'] },
-            { id: 4, name: '리저브', docs: ['pmc', 'proj'] },
-            { id: 5, name: '등대', docs: ['pmc', 'eqp'] },
-            { id: 6, name: '쇄빙선', docs: ['pmc', 'test'] },
-            { id: 7, name: '공장', docs: ['proj', 'blue'] },
-            { id: 8, name: '미궁', docs: ['blue', 'med'] },
-            { id: 9, name: '해안선', docs: ['test', 'eqp'] },
-            { id: 10, name: '삼림', docs: ['test', 'eqp'] },
-            { id: 11, name: '그라운드 제로', docs: ['user', 'med'] },
-            { id: 12, name: '연구실', docs: ['user', 'med'] }
-        ];
+      <!-- 4. 중앙하단 : 보유 및 필요 재화 계산 -->
+      <div class="bottom-panel">
+        <div class="panel-title">문서 보유량 및 필요 수량</div>
+        <div class="docs-grid" id="docsGrid">
+          <!-- JS로 동적 생성 -->
+        </div>
+      </div>
+    </div>
+  </div>
 
-        let selectedMapId = null;
-        let docState = {};
-        let parsedPagesData = [];
+  <!-- 편집 모달 -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h3 id="modalTitle">Edit Costs</h3>
+      <div style="font-size: 0.8rem; color: var(--text-dim); text-align: center;" id="modalPriceInfo">
+        해당 보상의 최대 재화 합계: <span id="maxPriceVal">0</span>
+      </div>
+      <div class="modal-grid" id="modalGrid">
+        <!-- JS로 동적 생성 -->
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-reset" id="modalResetBtn">기본값</button>
+        <button class="btn btn-cancel" id="modalCancelBtn">취소</button>
+        <button class="btn btn-save" id="modalSaveBtn">저장</button>
+      </div>
+    </div>
+  </div>
 
-        // 1. 데이터 파싱 (Tarkov.dev API 우선 연동 후 위키 프록시 시도)
-        async function fetchLatestSeasonRewards() {
-            const loadingIcon = document.getElementById('wikiLoadingIcon');
-            const statusText = document.getElementById('wikiStatusText');
+  <script>
+    // 문서 정의 (한글 표기 및 코드/파일명 매핑)
+    const DOCS_DATA = {
+      "FD": { name: "회계 문서", file: "FD.png" },
+      "PD": { name: "프로젝트 문서", file: "PD.png" },
+      "TD": { name: "테스트 문서", file: "TD.png" },
+      "MD": { name: "의료 문서", file: "MD.png" },
+      "PMC": { name: "PMC 인사 문서", file: "PMC.png" },
+      "BP": { name: "설계도", file: "BP.png" },
+      "UD": { name: "사용자 문서", file: "UD.png" },
+      "Tech": { name: "장비 문서", file: "Tech.png" }
+    };
 
-            if (loadingIcon) loadingIcon.classList.add('animate-spin');
-            if (statusText) statusText.innerText = '최신 데이터 조회 중...';
+    // 맵 정의 (맵 - 생성 문서 연계)
+    const MAPS_DATA = [
+      { name: "커스텀", docs: ["FD", "PD"] },
+      { name: "타르코프 시내", docs: ["FD", "UD"] },
+      { name: "인터체인지", docs: ["FD", "BP"] },
+      { name: "리저브", docs: ["PMC", "PD"] },
+      { name: "등대", docs: ["PMC", "Tech"] },
+      { name: "쇄빙선", docs: ["PMC", "TD"] },
+      { name: "공장", docs: ["PD", "BP"] },
+      { name: "미궁", docs: ["BP", "MD"] },
+      { name: "해안선", docs: ["TD", "Tech"] },
+      { name: "삼림", docs: ["TD", "Tech"] },
+      { name: "그라운드 제로", docs: ["UD", "MD"] },
+      { name: "실험실", docs: ["UD", "MD"] }
+    ];
 
-            let isSuccess = false;
+    // 유저가 수동 수정한 재화 데이터 저장소 (로컬 스토리지 연동)
+    let userCosts = JSON.parse(localStorage.getItem("eft_user_costs") || "{}");
+    let userInventory = JSON.parse(localStorage.getItem("eft_user_inventory") || "{}");
 
-            // 시도 1: tarkov.dev GraphQL API (Cloudflare 차단 없음)
-            try {
-                const query = `{
-                    items(type: barter) {
-                        id
-                        name
-                        iconLink
-                    }
-                }`;
-                const response = await fetch('https://api.tarkov.dev/graphql', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query }),
-                });
+    // 기본 로드맵 데이터 (파싱 실패시 대체용 백업 데이터)
+    let roadmapPages = [
+      {
+        page: 1,
+        req: "4/5",
+        rewards: [
+          { id: "p1_1", name: "Dogtag", price: 5, defaultCosts: { "FD": 1 }, icon: "" },
+          { id: "p1_2", name: "TarCoin", price: 3, defaultCosts: { "PD": 2, "BP": 1 }, icon: "" },
+          { id: "p1_3", name: "Poster", price: 3, defaultCosts: { "TD": 2, "UD": 1 }, icon: "" },
+          { id: "p1_4", name: "Crate", price: 3, defaultCosts: { "BP": 2, "FD": 1 }, icon: "" }
+        ]
+      }
+    ];
 
-                if (response.ok) {
-                    const resData = await response.json();
-                    if (resData.data && resData.data.items) {
-                        console.log('Tarkov.dev API연동 성공');
-                        // API 데이터가 확인되면 로컬 Fallback 데이터를 정교하게 동기화
-                        parsedPagesData = getFallbackPagesData();
-                        if (statusText) statusText.innerText = 'Tarkov API 최신 데이터 연동 완료';
-                        isSuccess = true;
-                    }
-                }
-            } catch (e) {
-                console.warn('Tarkov.dev API 호출 실패:', e);
+    let selectedMap = null;
+    let selectedDoc = null;
+    let currentEditReward = null;
+
+    // 초기화 함수
+    async function init() {
+      renderMapList();
+      renderDocsGrid();
+      await fetchFandomBattlePass();
+      renderRoadmap();
+      calculateRequirements();
+    }
+
+    // 2. 맵 목록 리더링
+    function renderMapList() {
+      const mapListEl = document.getElementById("mapList");
+      mapListEl.innerHTML = "<h2>맵 목록</h2>";
+
+      MAPS_DATA.forEach(map => {
+        const card = document.createElement("div");
+        card.className = `map-card ${selectedMap === map.name ? 'active' : ''}`;
+        card.id = `map-${map.name}`;
+        
+        const docBadges = map.docs.map(code => `<span class="doc-badge">${DOCS_DATA[code].name}</span>`).join("");
+        card.innerHTML = `
+          <div class="map-name">${map.name}</div>
+          <div class="map-docs">${docBadges}</div>
+        `;
+
+        card.addEventListener("click", () => handleMapClick(map));
+        mapListEl.appendChild(card);
+      });
+    }
+
+    // 맵 클릭 처리 (하이라이트 연계)
+    function handleMapClick(map) {
+      if (selectedMap === map.name) {
+        selectedMap = null;
+      } else {
+        selectedMap = map.name;
+      }
+      selectedDoc = null; // 맵 선택 시 기존 문서 선택 해제
+      updateHighlights();
+    }
+
+    // 문서 클릭 처리 (하이라이트 연계)
+    function handleDocClick(docCode) {
+      if (selectedDoc === docCode) {
+        selectedDoc = null;
+      } else {
+        selectedDoc = docCode;
+      }
+      selectedMap = null; // 문서 선택 시 기존 맵 선택 해제
+      updateHighlights();
+    }
+
+    // 하이라이트 동기화 함수
+    function updateHighlights() {
+      // 맵 카드 하이라이트
+      MAPS_DATA.forEach(map => {
+        const el = document.getElementById(`map-${map.name}`);
+        if (!el) return;
+        el.classList.remove("active", "highlight");
+        
+        if (selectedMap === map.name) {
+          el.classList.add("active");
+        } else if (selectedDoc && map.docs.includes(selectedDoc)) {
+          el.classList.add("highlight");
+        }
+      });
+
+      // 문서 카드 하이라이트
+      Object.keys(DOCS_DATA).forEach(code => {
+        const el = document.getElementById(`doc-item-${code}`);
+        if (!el) return;
+        el.classList.remove("highlight");
+
+        if (selectedDoc === code) {
+          el.classList.add("highlight");
+        } else if (selectedMap) {
+          const mapObj = MAPS_DATA.find(m => m.name === selectedMap);
+          if (mapObj && mapObj.docs.includes(code)) {
+            el.classList.add("highlight");
+          }
+        }
+      });
+    }
+
+    // 4. 중앙 하단 보유 문서 및 필요 수량 UI
+    function renderDocsGrid() {
+      const grid = document.getElementById("docsGrid");
+      grid.innerHTML = "";
+
+      Object.keys(DOCS_DATA).forEach(code => {
+        const doc = DOCS_DATA[code];
+        const count = userInventory[code] || 0;
+
+        const item = document.createElement("div");
+        item.className = "doc-item";
+        item.id = `doc-item-${code}`;
+
+        item.innerHTML = `
+          <div class="doc-icon-title">
+            <img src="${doc.file}" alt="${doc.name}" onerror="this.src='https://via.placeholder.com/28?text=${code}'">
+            <div class="doc-name">${doc.name}</div>
+          </div>
+          <div class="doc-counters">
+            <input type="number" min="0" class="doc-input" value="${count}" data-code="${code}">
+            <div class="doc-req" id="req-${code}">필요: 0</div>
+          </div>
+        `;
+
+        // 보유 수량 변경 이벤트
+        const input = item.querySelector(".doc-input");
+        input.addEventListener("change", (e) => {
+          userInventory[code] = parseInt(e.target.value) || 0;
+          localStorage.setItem("eft_user_inventory", JSON.stringify(userInventory));
+        });
+        input.addEventListener("click", (e) => e.stopPropagation());
+
+        // 카드 클릭 이벤트 (맵 하이라이트)
+        item.addEventListener("click", () => handleDocClick(code));
+
+        grid.appendChild(item);
+      });
+    }
+
+    // 팬덤 위키 동적 파싱 (3번)
+    async function fetchFandomBattlePass() {
+      try {
+        const corsProxy = "https://api.allorigins.win/raw?url=";
+        const targetUrl = encodeURIComponent("https://escapefromtarkov.fandom.com/wiki/BattlePass");
+        const res = await fetch(corsProxy + targetUrl);
+        if (!res.ok) return;
+
+        const htmlText = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, "text/html");
+
+        const parsedPages = [];
+        let currentPage = { page: 1, req: "", rewards: [] };
+        let pageCount = 1;
+
+        // 테이블 수집
+        const tables = doc.querySelectorAll("table.wikitable");
+        if (tables.length === 0) return;
+
+        // 최신 테이블 파싱
+        const targetTable = tables[0];
+        const rows = targetTable.querySelectorAll("tbody tr");
+
+        rows.forEach((tr, idx) => {
+          const tds = tr.querySelectorAll("td");
+          if (tds.length < 2) return;
+
+          const rewardName = tds[1]?.textContent?.trim() || `Reward ${idx}`;
+          const imgEl = tds[0]?.querySelector("img");
+          const iconSrc = imgEl ? (imgEl.getAttribute("data-src") || imgEl.src) : "";
+          const priceText = tds[tds.length - 1]?.textContent?.trim() || "1";
+          const price = parseInt(priceText) || 1;
+
+          currentPage.rewards.push({
+            id: `p${pageCount}_${idx}`,
+            name: rewardName,
+            price: price,
+            defaultCosts: { "FD": price },
+            icon: iconSrc
+          });
+
+          // border-bottom 2px 속성 검사 (페이지 종료 구분)
+          let isPageEnd = false;
+          tds.forEach(td => {
+            if (td.style.borderBottom && td.style.borderBottom.includes("2px")) {
+              isPageEnd = true;
             }
+          });
 
-            // 시도 2: 위키 크롤링 (API 미응답시 위키 HTML 시도)
-            if (!isSuccess) {
-                const wikiUrl = 'https://escapefromtarkov.fandom.com/wiki/BattlePass';
-                const proxies = [
-                    `https://api.allorigins.win/get?url=${encodeURIComponent(wikiUrl)}`,
-                    `https://corsproxy.io/?${encodeURIComponent(wikiUrl)}`
-                ];
+          if (isPageEnd) {
+            parsedPages.push(currentPage);
+            pageCount++;
+            currentPage = { page: pageCount, req: "", rewards: [] };
+          }
+        });
 
-                for (const proxy of proxies) {
-                    try {
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        if (currentPage.rewards.length > 0) {
+          parsedPages.push(currentPage);
+        }
 
-                        const response = await fetch(proxy, { signal: controller.signal });
-                        clearTimeout(timeoutId);
+        if (parsedPages.length > 0) {
+          roadmapPages = parsedPages;
+        }
+      } catch (err) {
+        console.warn("Fandom Wiki fetch failed, fallback to default.", err);
+      }
+    }
 
-                        if (response.ok) {
-                            let htmlText = '';
-                            if (proxy.includes('allorigins')) {
-                                const jsonData = await response.json();
-                                htmlText = jsonData.contents || '';
-                            } else {
-                                htmlText = await response.text();
-                            }
+    // 3. 로드맵 UI 렌더링
+    function renderRoadmap() {
+      const container = document.getElementById("roadmapContainer");
+      container.innerHTML = "";
 
-                            if (htmlText && htmlText.length > 2000 && !htmlText.includes('403 Forbidden')) {
-                                const parser = new DOMParser();
-                                const doc = parser.parseFromString(htmlText, 'text/html');
-                                const rewardTables = doc.querySelectorAll('table.wikitable');
+      roadmapPages.forEach(p => {
+        const col = document.createElement("div");
+        col.className = "roadmap-column";
 
-                                if (rewardTables.length > 0) {
-                                    const targetTable = rewardTables[rewardTables.length - 1];
-                                    const rows = targetTable.querySelectorAll('tr');
-                                    parsedPagesData = [];
-                                    let currentPage = null;
+        const header = document.createElement("div");
+        header.className = "column-header";
+        header.innerHTML = `<span>Page ${p.page}</span><span style="font-size:0.75rem; color:var(--text-dim);">${p.req}</span>`;
 
-                                    rows.forEach((row, index) => {
-                                        const cells = row.querySelectorAll('td');
-                                        if (cells.length === 0) return;
+        const body = document.createElement("div");
+        body.className = "column-body";
 
-                                        const levelCellText = cells[0].textContent.trim();
-                                        const pageMatch = levelCellText.match(/Page\s*(\d+)/i);
+        p.rewards.forEach(reward => {
+          const card = document.createElement("div");
+          card.className = "reward-card";
 
-                                        if (pageMatch) {
-                                            currentPage = { page: parseInt(pageMatch[1]), rewards: [] };
-                                            parsedPagesData.push(currentPage);
-                                        }
+          // 저장된 커스텀 수량 확인
+          const currentCosts = userCosts[reward.id] || reward.defaultCosts;
 
-                                        if (!currentPage) {
-                                            currentPage = { page: 1, rewards: [] };
-                                            parsedPagesData.push(currentPage);
-                                        }
-
-                                        const imgEl = row.querySelector('td img');
-                                        let imgSrc = '';
-                                        if (imgEl) {
-                                            imgSrc = imgEl.getAttribute('data-src') || imgEl.getAttribute('src') || '';
-                                            if (imgSrc.includes('/revision/latest')) imgSrc = imgSrc.split('/revision/latest')[0] + '/revision/latest';
-                                            if (imgSrc.startsWith('//')) imgSrc = 'https:' + imgSrc;
-                                        }
-
-                                        let itemName = '';
-                                        if (cells.length >= 3) {
-                                            const nameCell = row.querySelector('td:nth-child(3)') || cells[2];
-                                            itemName = nameCell ? nameCell.textContent.replace(/\n/g, ' ').trim() : '';
-                                        }
-
-                                        let reqCount = 0;
-                                        const priceCell = cells[cells.length - 1];
-                                        if (priceCell) reqCount = parseInt(priceCell.textContent.replace(/[^0-9]/g, '')) || 0;
-
-                                        if (itemName) {
-                                            const rewardId = `reward_p${currentPage.page}_${index}`;
-                                            currentPage.rewards.push({ id: rewardId, name: itemName, img: imgSrc, defaultReq: reqCount });
-                                        }
-                                    });
-
-                                    if (parsedPagesData.length > 0) {
-                                        if (statusText) statusText.innerText = '위키 최신 데이터 실시간 연동 완료';
-                                        isSuccess = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        console.warn('Wiki proxy fallback fail:', e);
-                    }
-                }
+          let costTags = "";
+          Object.keys(currentCosts).forEach(code => {
+            const amt = currentCosts[code];
+            if (amt > 0) {
+              costTags += `<span class="cost-tag"><img src="${DOCS_DATA[code].file}" style="width:12px;height:12px" onerror="this.style.display='none'"> ${amt} ${code}</span>`;
             }
+          });
 
-            // 시도 3: 위키 차단 시 로컬 최신 데이터 세트 즉시 적용
-            if (!isSuccess) {
-                if (statusText) statusText.innerText = '기본 최신 시즌 보상 데이터 적용됨';
-                const cached = localStorage.getItem('cached_wiki_pages');
-                if (cached) {
-                    parsedPagesData = JSON.parse(cached);
-                } else {
-                    parsedPagesData = getFallbackPagesData();
-                }
-            } else {
-                localStorage.setItem('cached_wiki_pages', JSON.stringify(parsedPagesData));
+          card.innerHTML = `
+            <div class="reward-title-row">
+              <div class="reward-title" title="${reward.name}">${reward.name}</div>
+              <span class="edit-btn" onclick="openEditModal('${reward.id}')">✏️</span>
+            </div>
+            <div class="reward-img-container">
+              <img src="${reward.icon}" alt="${reward.name}" onerror="this.src='https://via.placeholder.com/80?text=Reward'">
+            </div>
+            <div class="reward-costs">${costTags}</div>
+          `;
+
+          body.appendChild(card);
+        });
+
+        col.appendChild(header);
+        col.appendChild(body);
+        container.appendChild(col);
+      });
+    }
+
+    // 수량 편집 모달 제어
+    function openEditModal(rewardId) {
+      let reward = null;
+      for (const p of roadmapPages) {
+        const found = p.rewards.find(r => r.id === rewardId);
+        if (found) { reward = found; break; }
+      }
+      if (!reward) return;
+
+      currentEditReward = reward;
+      document.getElementById("modalTitle").innerText = `Edit Costs: ${reward.name}`;
+      document.getElementById("maxPriceVal").innerText = reward.price;
+
+      const grid = document.getElementById("modalGrid");
+      grid.innerHTML = "";
+
+      const activeCosts = userCosts[reward.id] || reward.defaultCosts;
+
+      Object.keys(DOCS_DATA).forEach(code => {
+        const val = activeCosts[code] || 0;
+        const group = document.createElement("div");
+        group.className = "modal-input-group";
+        group.innerHTML = `
+          <label><img src="${DOCS_DATA[code].file}" style="width:14px;height:14px;" onerror="this.style.display='none'"> ${DOCS_DATA[code].name}</label>
+          <input type="number" min="0" value="${val}" data-modal-code="${code}">
+        `;
+        grid.appendChild(group);
+      });
+
+      document.getElementById("editModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("editModal").style.display = "none";
+      currentEditReward = null;
+    }
+
+    // 모달 저장 처리 (재화 합계 유효성 검사)
+    document.getElementById("modalSaveBtn").addEventListener("click", () => {
+      if (!currentEditReward) return;
+
+      const inputs = document.querySelectorAll("[data-modal-code]");
+      let sum = 0;
+      const newCosts = {};
+
+      inputs.forEach(input => {
+        const code = input.getAttribute("data-modal-code");
+        const val = parseInt(input.value) || 0;
+        if (val > 0) newCosts[code] = val;
+        sum += val;
+      });
+
+      if (sum > currentEditReward.price) {
+        alert(`입력하신 재화의 총합(${sum})이 해당 보상의 필요 총량(${currentEditReward.price})을 초과할 수 없습니다.`);
+        return;
+      }
+
+      userCosts[currentEditReward.id] = newCosts;
+      localStorage.setItem("eft_user_costs", JSON.stringify(userCosts));
+
+      closeModal();
+      renderRoadmap();
+      calculateRequirements();
+    });
+
+    document.getElementById("modalResetBtn").addEventListener("click", () => {
+      if (!currentEditReward) return;
+      delete userCosts[currentEditReward.id];
+      localStorage.setItem("eft_user_costs", JSON.stringify(userCosts));
+      closeModal();
+      renderRoadmap();
+      calculateRequirements();
+    });
+
+    document.getElementById("modalCancelBtn").addEventListener("click", closeModal);
+
+    // 자동 소요 문서 합계 계산 (4번)
+    function calculateRequirements() {
+      const totals = { "FD":0, "PD":0, "TD":0, "MD":0, "PMC":0, "BP":0, "UD":0, "Tech":0 };
+
+      roadmapPages.forEach(p => {
+        p.rewards.forEach(r => {
+          const costs = userCosts[r.id] || r.defaultCosts;
+          Object.keys(costs).forEach(code => {
+            if (totals[code] !== undefined) {
+              totals[code] += costs[code];
             }
+          });
+        });
+      });
 
-            // 상태 초기화 및 바인딩
-            parsedPagesData.forEach(pg => {
-                pg.rewards.forEach(reward => {
-                    if (!docState[reward.id]) {
-                        docState[reward.id] = { req: reward.defaultReq, own: 0 };
-                    }
-                });
-            });
-
-            if (loadingIcon) loadingIcon.classList.remove('animate-spin');
-            renderPagesUI();
-            saveToStorage();
+      Object.keys(totals).forEach(code => {
+        const reqEl = document.getElementById(`req-${code}`);
+        if (reqEl) {
+          reqEl.innerText = `필요: ${totals[code]}`;
         }
+      });
+    }
 
-        // 2. 페이지별 UI 렌더링
-        function renderPagesUI() {
-            const container = document.getElementById('pagesContainer');
-            if (!container || parsedPagesData.length === 0) return;
-
-            container.innerHTML = '';
-
-            parsedPagesData.forEach(pg => {
-                const pageCol = document.createElement('div');
-                pageCol.className = 'page-column p-3 flex flex-col gap-3';
-
-                const rewardsHtml = pg.rewards.map(item => {
-                    const reqValue = docState[item.id] ? docState[item.id].req : item.defaultReq;
-
-                    return `
-                        <div class="reward-card p-3 flex flex-col justify-between gap-2.5">
-                            <div class="flex items-center justify-between">
-                                <span class="font-bold text-xs text-gray-200 truncate" title="${item.name}">${item.name}</span>
-                            </div>
-                            <div class="w-full h-24 bg-black/50 rounded flex items-center justify-center overflow-hidden border border-black/30 p-1">
-                                ${item.img 
-                                    ? `<img src="${item.img}" alt="${item.name}" class="object-contain h-full w-full" onerror="this.onerror=null; this.src='https://via.placeholder.com/100?text=Item';">` 
-                                    : `<i class="fa-solid fa-box text-gray-600 text-2xl"></i>`}
-                            </div>
-                            <div class="flex items-center justify-between bg-black/40 rounded-lg p-1 border border-tactical-border/60">
-                                <button onclick="adjustRewardReq('${item.id}', -1)" class="w-7 h-7 rounded bg-tactical-card hover:bg-tactical-border text-tactical-text hover:text-white flex items-center justify-center transition active:scale-95">
-                                    <i class="fa-solid fa-minus text-[10px]"></i>
-                                </button>
-                                <div class="flex items-center gap-1 font-mono font-bold text-sm text-blue-400">
-                                    <input 
-                                        type="number" min="0" max="999" value="${reqValue}" 
-                                        id="input_req_${item.id}"
-                                        onchange="onRewardInputChange('${item.id}', this.value)"
-                                        oninput="onRewardInputChange('${item.id}', this.value)"
-                                        class="w-12 bg-transparent text-center focus:outline-none focus:text-tactical-accent"
-                                    />
-                                    <span class="text-[10px] text-tactical-muted font-normal">Docs</span>
-                                </div>
-                                <button onclick="adjustRewardReq('${item.id}', 1)" class="w-7 h-7 rounded bg-tactical-card hover:bg-tactical-border text-tactical-text hover:text-white flex items-center justify-center transition active:scale-95">
-                                    <i class="fa-solid fa-plus text-[10px]"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                pageCol.innerHTML = `
-                    <div class="flex items-center justify-between pb-2 border-b border-tactical-border">
-                        <h3 class="font-bold text-sm text-amber-400 flex items-center gap-1.5">
-                            <i class="fa-solid fa-book-open text-xs"></i> Page ${pg.page}
-                        </h3>
-                        <span class="text-[11px] font-mono text-tactical-muted">Items: ${pg.rewards.length}</span>
-                    </div>
-                    <div class="flex flex-col gap-2.5 max-h-[70vh] overflow-y-auto pr-1">
-                        ${rewardsHtml}
-                    </div>
-                `;
-
-                container.appendChild(pageCol);
-            });
-
-            updateCalculations();
-        }
-
-        function adjustRewardReq(id, delta) {
-            if (!docState[id]) docState[id] = { req: 0, own: 0 };
-            const currentVal = docState[id].req;
-            const newVal = Math.max(0, currentVal + delta);
-            docState[id].req = newVal;
-
-            const inputEl = document.getElementById(`input_req_${id}`);
-            if (inputEl) inputEl.value = newVal;
-
-            updateCalculations();
-            saveToStorage();
-        }
-
-        function onRewardInputChange(id, rawValue) {
-            if (!docState[id]) docState[id] = { req: 0, own: 0 };
-            let val = parseInt(rawValue);
-            if (isNaN(val) || val < 0) val = 0;
-            docState[id].req = val;
-
-            updateCalculations();
-            saveToStorage();
-        }
-
-        function initData() {
-            DOCUMENTS.forEach(doc => {
-                docState[doc.id] = { req: doc.defaultReq, own: 0 };
-            });
-        }
-
-        function saveToStorage() {
-            try {
-                localStorage.setItem('battlepass_doc_state', JSON.stringify(docState));
-            } catch(e) {
-                console.warn('LocalStorage save failed:', e);
-            }
-        }
-
-        function loadFromStorage() {
-            try {
-                const saved = localStorage.getItem('battlepass_doc_state');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    Object.keys(parsed).forEach(key => {
-                        docState[key] = {
-                            req: Math.max(0, parseInt(parsed[key].req) || 0),
-                            own: Math.max(0, parseInt(parsed[key].own) || 0)
-                        };
-                    });
-                    return true;
-                }
-            } catch(e) {
-                console.warn('LocalStorage load failed:', e);
-            }
-            return false;
-        }
-
-        function renderMapList() {
-            const container = document.getElementById('mapListContainer');
-            container.innerHTML = '';
-
-            MAPS.forEach(map => {
-                const mapCard = document.createElement('div');
-                const isSelected = selectedMapId === map.id;
-                const docObjs = map.docs.map(docId => DOCUMENTS.find(d => d.id === docId)).filter(Boolean);
-
-                mapCard.className = `p-3 rounded-lg border transition cursor-pointer flex flex-col gap-1.5 ${
-                    isSelected ? 'map-item-active border-tactical-accent' : 'bg-tactical-card/70 border-tactical-border/80 hover:border-tactical-olive hover:bg-tactical-card'
-                }`;
-
-                mapCard.onclick = () => toggleMapSelection(map.id);
-
-                mapCard.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-sm text-white flex items-center gap-2">
-                            <span class="text-xs font-mono text-tactical-accent font-semibold">${map.id < 10 ? '0' + map.id : map.id}.</span>
-                            ${map.name}
-                        </span>
-                        <i class="fa-solid ${isSelected ? 'fa-circle-dot text-tactical-accent' : 'fa-chevron-right text-tactical-muted text-xs'}"></i>
-                    </div>
-                    <div class="flex flex-wrap gap-1 mt-0.5">
-                        ${docObjs.map(d => `
-                            <span class="text-[11px] px-2 py-0.5 rounded bg-black/40 border border-tactical-border/60 text-gray-300 flex items-center gap-1 font-medium">
-                                <i class="fa-solid ${d.icon} text-[9px] text-tactical-accent"></i>
-                                ${d.name}
-                            </span>
-                        `).join('')}
-                    </div>
-                `;
-                container.appendChild(mapCard);
-            });
-        }
-
-        function toggleMapSelection(mapId) {
-            selectedMapId = selectedMapId === mapId ? null : mapId;
-            renderMapList();
-            applyCardHighlights();
-        }
-
-        function applyCardHighlights() {
-            document.querySelectorAll('.doc-card').forEach(card => card.classList.remove('doc-highlight'));
-            if (!selectedMapId) return;
-
-            const selectedMap = MAPS.find(m => m.id === selectedMapId);
-            if (selectedMap) {
-                selectedMap.docs.forEach(docId => {
-                    const ownCard = document.getElementById(`card_own_${docId}`);
-                    if (ownCard) ownCard.classList.add('doc-highlight');
-                });
-            }
-        }
-
-        function renderGrids() {
-            const ownGrid = document.getElementById('ownedDocGrid');
-            ownGrid.innerHTML = '';
-
-            DOCUMENTS.forEach((doc) => {
-                ownGrid.appendChild(createCard(doc, 'own'));
-            });
-
-            updateCalculations();
-            applyCardHighlights();
-        }
-
-        function createCard(doc, type) {
-            const value = docState[doc.id] ? docState[doc.id][type] : 0;
-            const card = document.createElement('div');
-            card.id = `card_${type}_${doc.id}`;
-            card.className = `doc-card tactical-glass border border-tactical-border hover:border-tactical-olive rounded-lg p-3.5 transition duration-200 flex flex-col justify-between`;
-
-            card.innerHTML = `
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center space-x-2.5 overflow-hidden">
-                        <div class="w-8 h-8 rounded bg-tactical-olive/20 text-green-400 border border-tactical-olive/30 flex items-center justify-center shrink-0">
-                            <i class="fa-solid ${doc.icon} text-sm"></i>
-                        </div>
-                        <span class="font-bold text-sm text-gray-200 truncate">${doc.name}</span>
-                    </div>
-                    <span class="text-[10px] font-mono text-tactical-muted uppercase">#0${DOCUMENTS.findIndex(d => d.id === doc.id) + 1}</span>
-                </div>
-                <div class="flex items-center justify-between bg-black/40 rounded-lg p-1.5 border border-tactical-border/60">
-                    <button onclick="adjustValue('${doc.id}', '${type}', -1)" class="w-8 h-8 rounded bg-tactical-card hover:bg-tactical-border text-tactical-text hover:text-white flex items-center justify-center transition active:scale-95">
-                        <i class="fa-solid fa-minus text-xs"></i>
-                    </button>
-                    <input 
-                        type="number" min="0" max="999" value="${value}" 
-                        id="input_${type}_${doc.id}"
-                        onchange="onInputChange('${doc.id}', '${type}', this.value)"
-                        oninput="onInputChange('${doc.id}', '${type}', this.value)"
-                        class="w-16 bg-transparent text-center font-mono font-bold text-lg text-white focus:outline-none focus:text-tactical-accent"
-                    />
-                    <button onclick="adjustValue('${doc.id}', '${type}', 1)" class="w-8 h-8 rounded bg-tactical-card hover:bg-tactical-border text-tactical-text hover:text-white flex items-center justify-center transition active:scale-95">
-                        <i class="fa-solid fa-plus text-xs"></i>
-                    </button>
-                </div>
-            `;
-
-            return card;
-        }
-
-        function adjustValue(id, type, delta) {
-            if (!docState[id]) docState[id] = { req: 0, own: 0 };
-            const currentVal = docState[id][type];
-            const newVal = Math.max(0, currentVal + delta);
-            docState[id][type] = newVal;
-            
-            const inputEl = document.getElementById(`input_${type}_${id}`);
-            if (inputEl) inputEl.value = newVal;
-
-            updateCalculations();
-            saveToStorage();
-        }
-
-        function onInputChange(id, type, rawValue) {
-            if (!docState[id]) docState[id] = { req: 0, own: 0 };
-            let val = parseInt(rawValue);
-            if (isNaN(val) || val < 0) val = 0;
-            docState[id][type] = val;
-
-            updateCalculations();
-            saveToStorage();
-        }
-
-        function updateCalculations() {
-            let totalReq = 0;
-            let totalOwn = 0;
-
-            parsedPagesData.forEach(pg => {
-                pg.rewards.forEach(reward => {
-                    const req = docState[reward.id] ? docState[reward.id].req : reward.defaultReq;
-                    totalReq += req;
-                });
-            });
-
-            DOCUMENTS.forEach(doc => {
-                const own = docState[doc.id] ? docState[doc.id].own : 0;
-                totalOwn += own;
-            });
-
-            const totalMissing = Math.max(0, totalReq - totalOwn);
-
-            const summaryGrid = document.getElementById('summaryGrid');
-            summaryGrid.innerHTML = '';
-
-            DOCUMENTS.forEach(doc => {
-                const own = docState[doc.id] ? docState[doc.id].own : 0;
-
-                const itemBox = document.createElement('div');
-                itemBox.className = `p-2 rounded border text-xs flex flex-col justify-between transition bg-tactical-card/80 border-tactical-border text-gray-300`;
-
-                itemBox.innerHTML = `
-                    <div class="text-[11px] font-medium truncate text-gray-300 mb-1">${doc.name}</div>
-                    <div class="flex items-center justify-between font-mono">
-                        <span class="text-[10px] text-tactical-muted">보유:</span>
-                        <span class="font-bold text-sm text-green-400">${own}개</span>
-                    </div>
-                `;
-
-                summaryGrid.appendChild(itemBox);
-            });
-
-            let percent = totalReq > 0 ? Math.round((Math.min(totalOwn, totalReq) / totalReq) * 100) : 100;
-
-            document.getElementById('overallPercent').innerText = `${percent}%`;
-            document.getElementById('overallProgressBar').style.width = `${Math.min(100, percent)}%`;
-            document.getElementById('totalCurrent').innerText = totalOwn;
-            document.getElementById('totalRequired').innerText = totalReq;
-            document.getElementById('totalMissing').innerText = `${totalMissing}개`;
-
-            const statusBadge = document.getElementById('statusBadge');
-            if (totalReq > 0 && totalMissing === 0) {
-                statusBadge.className = 'px-2.5 py-1 rounded text-xs font-bold font-mono border bg-green-500/10 text-green-400 border-green-500/30 flex items-center gap-1.5';
-                statusBadge.innerHTML = `<i class="fa-solid fa-circle-check text-green-400"></i><span>ALL COMPLETED</span>`;
-            } else {
-                statusBadge.className = 'px-2.5 py-1 rounded text-xs font-bold font-mono border bg-amber-500/10 text-amber-400 border-amber-500/30 flex items-center gap-1.5';
-                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span><span>IN PROGRESS</span>`;
-            }
-        }
-
-        function clearAllOwned() {
-            DOCUMENTS.forEach(doc => {
-                if (docState[doc.id]) docState[doc.id].own = 0;
-            });
-            renderGrids();
-            saveToStorage();
-        }
-
-        function resetAll() {
-            if (confirm('모든 수량을 초기화하시겠습니까?')) {
-                initData();
-                renderGrids();
-                fetchLatestSeasonRewards();
-                saveToStorage();
-            }
-        }
-
-        // 시즌 페이지 데이터베이스 (연동 차단 시 내장 데이터)
-        function getFallbackPagesData() {
-            return [
-                {
-                    page: 1,
-                    rewards: [
-                        { id: 'fb_p1_1', name: 'Marked dogtag', img: 'https://assets.tarkov.dev/5c0d5e4486f7704521415e92-icon.webp', defaultReq: 1 },
-                        { id: 'fb_p1_2', name: 'TarCoin X50', img: 'https://assets.tarkov.dev/665efb318f780824b20a024c-icon.webp', defaultReq: 3 },
-                        { id: 'fb_p1_3', name: 'BURN poster', img: 'https://assets.tarkov.dev/5448b2e34fa2d8a02e8b4567-icon.webp', defaultReq: 3 }
-                    ]
-                },
-                {
-                    page: 2,
-                    rewards: [
-                        { id: 'fb_p2_1', name: 'Ops-Core SOTR', img: 'https://assets.tarkov.dev/5a15a81886f77014022a1012-icon.webp', defaultReq: 4 },
-                        { id: 'fb_p2_2', name: 'Red Hawaii Shirt', img: 'https://assets.tarkov.dev/5c0e3f8486f770335e3966a3-icon.webp', defaultReq: 7 }
-                    ]
-                },
-                {
-                    page: 3,
-                    rewards: [
-                        { id: 'fb_p3_1', name: 'Secure Container Gamma', img: 'https://assets.tarkov.dev/5857a8bc245a772bad15db29-icon.webp', defaultReq: 15 },
-                        { id: 'fb_p3_2', name: 'T-7 Thermal Goggles', img: 'https://assets.tarkov.dev/5c05580686f770138513b243-icon.webp', defaultReq: 20 }
-                    ]
-                }
-            ];
-        }
-
-        window.onload = function() {
-            initData();
-            loadFromStorage();
-            renderMapList();
-            renderGrids();
-            fetchLatestSeasonRewards();
-        };
-    </script>
+    // 실행
+    init();
+  </script>
 </body>
 </html>

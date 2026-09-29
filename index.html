@@ -670,14 +670,20 @@
         const rows = targetTable.querySelectorAll("tbody tr");
 
         rows.forEach((tr, idx) => {
-          const tds = tr.querySelectorAll("td");
-          if (tds.length < 2) return;
+          // th와 td를 모두 가져옵니다.
+          const cells = tr.querySelectorAll("th, td");
+          if (cells.length < 3) return;
 
-          const rewardName = tds[2]?.textContent?.trim() || `Reward ${idx}`;
-          const imgEl = tds[1]?.querySelector("img");
+          // 2번째 셀(cells[1])에서 이미지 파싱
+          const imgEl = cells[1]?.querySelector("img");
           const iconSrc = imgEl ? (imgEl.getAttribute("data-src") || imgEl.src) : "";
-          const priceText = tds[tds.length - 1]?.textContent?.trim() || "1";
-          const price = parseInt(priceText) || 1;
+
+          // 3번째 셀(cells[2])에서 보상 이름 파싱
+          const rewardName = cells[2]?.textContent?.trim() || `Reward ${idx}`;
+
+          // 마지막 셀에서 가격 파싱
+          const priceText = cells[cells.length - 1]?.textContent?.trim() || "1";
+          const price = parseInt(priceText, 10) || 1;
 
           currentPage.rewards.push({
             id: `p${pageCount}_${idx}`,
@@ -689,8 +695,8 @@
 
           // border-bottom 2px 속성 검사 (페이지 종료 구분)
           let isPageEnd = false;
-          tds.forEach(td => {
-            if (td.style.borderBottom && td.style.borderBottom.includes("2px")) {
+          cells.forEach(cell => {
+            if (cell.style.borderBottom && cell.style.borderBottom.includes("2px")) {
               isPageEnd = true;
             }
           });

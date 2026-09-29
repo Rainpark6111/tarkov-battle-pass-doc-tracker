@@ -183,26 +183,6 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-
-    /* 획득 완료 상태 (초록색 음영 처리) */
-    .reward-card.obtained {
-      background-color: rgba(46, 125, 50, 0.25) !important;
-      border: 1px solid #4caf50 !important;
-      box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
-    }
-
-    .reward-card.obtained::after {
-      content: "✓ 획득함";
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      color: #81c784;
     }
 
     .reward-title-row {
@@ -665,40 +645,6 @@
       });
     }
 
-    // 보상 카드 클릭 토글 함수
-    function toggleRewardObtained(rewardId) {
-      roadmapPages.forEach(page => {
-        page.rewards.forEach(reward => {
-          if (reward.id === rewardId) {
-            reward.obtained = !reward.obtained; // 상태 토글 (미획득 <-> 획득)
-          }
-        });
-      });
-      
-      // UI 업데이트 및 필요한 문서 총 수량 재계산
-      renderRoadmapUI();
-      calculateTotalRequiredDocs();
-    }
-
-    // 필요한 총 문서 수량 계산 함수 (획득한 보상은 제외)
-    function calculateTotalRequiredDocs() {
-      const totalDocs = {};
-
-      roadmapPages.forEach(page => {
-        page.rewards.forEach(reward => {
-          // 이미 획득한 보상(obtained: true)은 수량 계산에서 제외
-          if (reward.obtained) return;
-
-          const costs = reward.defaultCosts || {};
-          Object.keys(costs).forEach(docType => {
-            totalDocs[docType] = (totalDocs[docType] || 0) + costs[docType];
-          });
-        });
-      });
-
-      renderTotalDocsUI(totalDocs);
-    }
-
     // 팬덤 위키 동적 파싱 (3번)
     async function fetchFandomBattlePass() {
       try {
@@ -715,32 +661,22 @@
         let currentPage = { page: 1, req: "", rewards: [] };
         let pageCount = 1;
 
+        // 테이블 수집
         const tables = doc.querySelectorAll("table.wikitable");
         if (tables.length === 0) return;
 
+        // 최신 테이블 파싱
         const targetTable = tables[0];
         const rows = targetTable.querySelectorAll("tbody tr");
 
         rows.forEach((tr, idx) => {
           const tds = tr.querySelectorAll("td");
-          // Level, Icon, Name, Type, Price 등 최소 5개 열 확인
-          if (tds.length < 5) return;
+          if (tds.length < 2) return;
 
-          // 3열(인덱스 2): Name (Marked dogtag, TarCoin ×50, BURN poster 등)
-          const rewardName = tds[2]?.textContent?.trim() || `Reward ${idx}`;
-          
-          // 2열(인덱스 1): Icon 이미지
-          const imgEl = tds[1]?.querySelector("img");
-          let iconSrc = "";
-          if (imgEl) {
-            iconSrc = imgEl.getAttribute("data-src") || imgEl.getAttribute("src") || "";
-            if (iconSrc.includes("/revision/latest")) {
-              iconSrc = iconSrc.split("/revision/latest")[0] + "/revision/latest";
-            }
-          }
-
-          // 5열(인덱스 4): Price (재화 필요 수량)
-          const priceText = tds[4]?.textContent?.trim() || "1";
+          const rewardName = tds[1]?.textContent?.trim() || `Reward ${idx}`;
+          const imgEl = tds[0]?.querySelector("img");
+          const iconSrc = imgEl ? (imgEl.getAttribute("data-src") || imgEl.src) : "";
+          const priceText = tds[tds.length - 1]?.textContent?.trim() || "1";
           const price = parseInt(priceText) || 1;
 
           currentPage.rewards.push({
@@ -748,11 +684,10 @@
             name: rewardName,
             price: price,
             defaultCosts: { "FD": price },
-            icon: iconSrc,
-            obtained: false // 획득 여부 기본값
+            icon: iconSrc
           });
 
-          // 구분선(페이지 구분) 검사
+          // border-bottom 2px 속성 검사 (페이지 종료 구분)
           let isPageEnd = false;
           tds.forEach(td => {
             if (td.style.borderBottom && td.style.borderBottom.includes("2px")) {

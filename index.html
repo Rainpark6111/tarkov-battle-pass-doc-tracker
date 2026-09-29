@@ -292,21 +292,25 @@
 
     .doc-icon-title {
       display: flex;
-      flex-direction: column;
+      flex-direction: row; /* 좌(이미지) - 우(이름) 배치 */
       align-items: center;
-      gap: 2px;
+      gap: 10px;
+      width: 100%;
     }
 
     .doc-icon-title img {
-      width: 28px;
-      height: 28px;
+      width: 70px;  /* 기존 28px -> 2.5배 확대한 70px */
+      height: 70px;
       object-fit: contain;
+      flex-shrink: 0;
     }
 
     .doc-name {
-      font-size: 0.75rem;
+      font-size: 0.85rem;
       color: var(--text-color);
-      text-align: center;
+      text-align: left;
+      font-weight: 500;
+      word-break: keep-all;
     }
 
     .doc-counters {
@@ -657,21 +661,33 @@
         let currentPage = { page: 1, req: "", rewards: [] };
         let pageCount = 1;
 
-        // 테이블 수집
         const tables = doc.querySelectorAll("table.wikitable");
         if (tables.length === 0) return;
 
-        // 최신 테이블 파싱
         const targetTable = tables[0];
         const rows = targetTable.querySelectorAll("tbody tr");
 
         rows.forEach((tr, idx) => {
           const tds = tr.querySelectorAll("td");
-          if (tds.length < 2) return;
+          // 보상 이미지(2열), 보상 이름(3열)이 존재하는지 확인
+          if (tds.length < 3) return;
 
-          const rewardName = tds[1]?.textContent?.trim() || `Reward ${idx}`;
-          const imgEl = tds[0]?.querySelector("img");
-          const iconSrc = imgEl ? (imgEl.getAttribute("data-src") || imgEl.src) : "";
+          // 3열: 보상 이름 (tds[2])
+          const rewardName = tds[2]?.textContent?.trim() || `Reward ${idx}`;
+          
+          // 2열: 보상 이미지 (tds[1])
+          const imgEl = tds[1]?.querySelector("img");
+          let iconSrc = "";
+          if (imgEl) {
+            // 위키 lazy loading 대응 (data-src 속성선순위 확인)
+            iconSrc = imgEl.getAttribute("data-src") || imgEl.getAttribute("src") || "";
+            // static.wikia.net 주소 정제 (썸네일 크기 파라미터 제약 제거)
+            if (iconSrc.includes("/revision/latest")) {
+              iconSrc = iconSrc.split("/revision/latest")[0] + "/revision/latest";
+            }
+          }
+
+          // 소요 재화 총량 (마지막 열)
           const priceText = tds[tds.length - 1]?.textContent?.trim() || "1";
           const price = parseInt(priceText) || 1;
 

@@ -58,6 +58,14 @@
       letter-spacing: 0.5px;
     }
 
+    #seasonName {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-left: 6px;
+      letter-spacing: 0;
+    }
+
     /* Main Content Layout */
     .main-container {
       display: flex;
@@ -142,9 +150,10 @@
     /* Central Roadmap Scroll */
     .roadmap-scroll {
       flex: 1;
+      min-height: 0;
       overflow-x: auto;
       overflow-y: hidden;
-      padding: 15px;
+      padding: 12px 15px;
       display: flex;
       gap: 15px;
       background-color: #16181d;
@@ -272,14 +281,15 @@
 
     /* Bottom Panel: Inventory & Requirements */
     .bottom-panel {
-      height: 180px;
+      height: 220px;
       background-color: var(--panel-bg);
       border-top: 1px solid var(--border-color);
-      padding: 12px 20px;
+      padding: 10px 20px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 6px;
       flex-shrink: 0;
+      min-height: 0;
     }
 
     .panel-title {
@@ -290,9 +300,11 @@
 
     .docs-grid {
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
+      grid-template-columns: repeat(8, minmax(0, 1fr));
       gap: 10px;
-      height: 100%;
+      flex: 1;
+      min-height: 0;
+      align-items: center;
     }
 
     .doc-item {
@@ -300,10 +312,12 @@
       border: 2px solid var(--border-color);
       border-radius: 6px;
       padding: 8px;
+      height: 156px;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -320,6 +334,7 @@
       align-items: center;
       gap: 10px;
       width: 100%;
+      justify-content: center;
     }
 
     .doc-icon-title img {
@@ -380,6 +395,16 @@
       font-weight: bold;
       display: flex;
       align-items: center;
+    }
+
+    @media (max-width: 1100px) {
+      .docs-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .bottom-panel {
+        height: 250px;
+      }
     }
 
     /* Modal */
@@ -470,7 +495,7 @@
     <a href="https://www.escapefromtarkov.com/" target="_blank">
       <img src="https://www.escapefromtarkov.com/build-eft-site/_nuxt/logo.WO0wViWU.webp" alt="Escape from Tarkov">
     </a>
-    <h1>Tarkov Battle Pass Tracker</h1>
+    <h1>Tarkov Battle Pass Tracker <span id="seasonName"></span></h1>
   </header>
 
   <div class="main-container">
@@ -686,74 +711,225 @@
       });
     }
 
+    // 파싱된 페이지에서 시즌명 추출
+    function extractSeasonName(doc, htmlText) {
+      const candidates = [];
+
+      // 문서 제목 / heading / 일반 텍스트 순서로 후보 수집
+      if (doc.title) candidates.push(doc.title);
+      doc.querySelectorAll('h1, h2, h3, h4, .mw-parser-output p, .mw-parser-output div').forEach(el => {
+        const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
+        if (text) candidates.push(text);
+      });
+      candidates.push((doc.body?.innerText || '').replace(/\s+/g, ' '));
+
+      // 예: Season 1 - "KORD BREACH" / Season 1 - KORD BREACH
+      for (const candidate of candidates) {
+        const seasonNumber = candidate.match(/\bSeason\s+(\d+)\b/i)?.[1];
+        if (!seasonNumber) continue;
+
+        // 따옴표가 있는 경우: 시즌명만 정확히 추출
+        let match = candidate.match(/\bSeason\s+\d+\s*[-–—:]\s*[\"“”']([^\"“”']+)[\"“”']/i);
+        if (match) {
+          return `Season ${seasonNumber} - \"${match[1].trim()}\"`;
+        }
+
+        // 따옴표가 없는 경우도 대응
+        match = candidate.match(/\bSeason\s+\d+\s*[-–—:]\s*([^|\n\r]+)/i);
+        if (match) {
+          const name = match[1].trim().replace(/[.!,:;]+$/, '');
+          if (name && name.length < 100) return `Season ${seasonNumber} - \"${name}\"`;
+        }
+      }
+
+      return '';
+    }
+
+    function setSeasonName(seasonName) {
+      const seasonEl = document.getElementById('seasonName');
+      if (seasonEl) seasonEl.textContent = seasonName ? `(${seasonName})` : '';
+    }
+
     // 팬덤 위키 데이터 파싱
     async function fetchFandomBattlePass() {
-      try {
-        const corsProxy = "https://api.allorigins.win/raw?url=";
-        const targetUrl = encodeURIComponent("https://escapefromtarkov.fandom.com/wiki/BattlePass");
-        const res = await fetch(corsProxy + targetUrl);
-        if (!res.ok) return;
+      const targetPage = "BattlePass";
 
-        const htmlText = await res.text();
+      // Fandom 페이지 HTML 자체를 가져오는 방식은 CORS 프록시 상태나
+      // 위키의 HTML 구조 변경에 따라 갑자기 실패할 수 있다.
+      // MediaWiki Action API를 우선 사용하고, 실패하면 프록시 HTML을 시도한다.
+      const apiUrls = [
+        `https://escapefromtarkov.fandom.com/api.php?action=parse&page=${encodeURIComponent(targetPage)}&prop=text&format=json&origin=*`,
+        `https://escapefromtarkov.fandom.com/api.php?action=parse&page=${encodeURIComponent(targetPage)}&prop=text&format=json&origin=https://escapefromtarkov.fandom.com`
+      ];
+
+      const proxyUrls = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://escapefromtarkov.fandom.com/wiki/${targetPage}`)}`,
+        `https://corsproxy.io/?${encodeURIComponent(`https://escapefromtarkov.fandom.com/wiki/${targetPage}`)}`
+      ];
+
+      try {
+        let htmlText = "";
+
+        // 1) Fandom MediaWiki API
+        for (const url of apiUrls) {
+          try {
+            const res = await fetch(url, { cache: "no-store" });
+            if (!res.ok) continue;
+
+            const data = await res.json();
+            const apiHtml = data?.parse?.text?.["*"];
+            if (apiHtml) {
+              htmlText = apiHtml;
+              break;
+            }
+          } catch (e) {
+            console.warn("Fandom API attempt failed:", e);
+          }
+        }
+
+        // 2) API가 막힌 경우 CORS 프록시 fallback
+        if (!htmlText) {
+          for (const url of proxyUrls) {
+            try {
+              const res = await fetch(url, { cache: "no-store" });
+              if (!res.ok) continue;
+
+              htmlText = await res.text();
+              if (htmlText && htmlText.includes("<table")) break;
+            } catch (e) {
+              console.warn("Fandom proxy attempt failed:", e);
+            }
+          }
+        }
+
+        if (!htmlText) {
+          console.warn("Fandom BattlePass 데이터를 가져오지 못했습니다. 기본 데이터를 유지합니다.");
+          return;
+        }
+
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, "text/html");
 
+        // 시즌명도 같은 파싱 결과에서 추출하여 제목에 표시
+        const seasonName = extractSeasonName(doc, htmlText);
+        if (seasonName) setSeasonName(seasonName);
+
+        // API 응답의 <table> 또는 일반 페이지의 wikitable 모두 대응
+        const tables = [...doc.querySelectorAll("table.wikitable, table")];
+        if (tables.length === 0) {
+          console.warn("BattlePass 테이블을 찾지 못했습니다.");
+          return;
+        }
+
+        // Level / Icon / Name / Type / Price(BP) 열을 가진 실제 BattlePass 표를 찾는다.
+        const targetTable = tables.find(table => {
+          const text = (table.innerText || table.textContent || "").replace(/\s+/g, " ").toLowerCase();
+          return text.includes("level") &&
+                 text.includes("price") &&
+                 (text.includes("battle points") || text.includes("price (bp)"));
+        }) || tables[0];
+
+        const rows = [...targetTable.querySelectorAll("tr")];
         const parsedPages = [];
-        let currentPage = { page: 1, req: "", rewards: [] };
-        let pageCount = 1;
+        let currentPage = null;
+        let pageCount = 0;
+        let rewardIndex = 0;
 
-        const tables = doc.querySelectorAll("table.wikitable");
-        if (tables.length === 0) return;
-
-        const targetTable = tables[0];
-        const rows = targetTable.querySelectorAll("tbody tr");
-
-        rows.forEach((tr, idx) => {
-          if (idx === 0) return;
-
-          const cells = tr.querySelectorAll("th, td");
+        rows.forEach((tr) => {
+          const cells = [...tr.querySelectorAll(":scope > th, :scope > td")];
           if (cells.length < 3) return;
 
-          const imgEl = cells[1]?.querySelector("img");
-          const iconSrc = imgEl ? (imgEl.getAttribute("data-src") || imgEl.src) : "";
-          const rewardName = cells[2]?.textContent?.trim() || `Reward ${idx}`;
-          const priceText = cells[cells.length - 1]?.textContent?.trim() || "1";
-          const price = parseInt(priceText, 10) || 1;
+          const cellText = cells.map(c => (c.innerText || c.textContent || "").replace(/\s+/g, " ").trim());
+          const rowText = cellText.join(" ");
 
+          // 헤더 행
+          if (/^level$/i.test(cellText[0]) ||
+              cellText.some(v => /^price(?:\s*\(bp\))?$/i.test(v))) {
+            return;
+          }
+
+          // 첫 번째 열에 "Page N"이 포함된 행이 새 페이지의 시작이다.
+          const pageMatch = rowText.match(/\bPage\s+(\d+)\b/i);
+          if (pageMatch) {
+            pageCount = Number(pageMatch[1]) || (pageCount + 1);
+
+            currentPage = {
+              page: pageCount,
+              req: "",
+              rewards: []
+            };
+            parsedPages.push(currentPage);
+          }
+
+          // Page 표시가 첫 보상보다 먼저 나오지 않는 비정상 구조도 처리
+          if (!currentPage) {
+            pageCount++;
+            currentPage = { page: pageCount, req: "", rewards: [] };
+            parsedPages.push(currentPage);
+          }
+
+          // 현재 BattlePass 표는 [Level, Icon, Name, Type, Price, ...] 구조다.
+          // rowspan 때문에 Icon/Name 셀이 비어 있는 경우에도 실제 텍스트가 있는 셀을 찾아낸다.
+          const nameCell = cells[2] || cells.find((c, i) => i > 1 && (c.innerText || "").trim());
+          const rewardName = (nameCell?.innerText || nameCell?.textContent || "").replace(/\s+/g, " ").trim();
+
+          if (!rewardName || /^(name|type)$/i.test(rewardName)) return;
+
+          const imgEl =
+            cells[1]?.querySelector("img") ||
+            cells.find(c => c.querySelector("img"))?.querySelector("img");
+
+          const iconSrc = imgEl
+            ? (imgEl.getAttribute("data-src") ||
+               imgEl.getAttribute("data-lazy-src") ||
+               imgEl.getAttribute("src") || "")
+            : "";
+
+          // 가격 열은 헤더명을 기준으로 찾고, 실패하면 숫자 셀 중 마지막 값을 사용한다.
+          let priceIndex = -1;
+          const headerRow = rows.find(r =>
+            [...r.querySelectorAll(":scope > th, :scope > td")]
+              .some(c => /^price(?:\s*\(bp\))?$/i.test((c.innerText || c.textContent || "").trim()))
+          );
+
+          if (headerRow) {
+            const headers = [...headerRow.querySelectorAll(":scope > th, :scope > td")]
+              .map(c => (c.innerText || c.textContent || "").replace(/\s+/g, " ").trim().toLowerCase());
+            priceIndex = headers.findIndex(v => v === "price (bp)" || v === "price");
+          }
+
+          let priceText = priceIndex >= 0
+            ? cellText[priceIndex]
+            : cellText.slice(3).reverse().find(v => /^\d+$/.test(v)) || "1";
+
+          // "5 BP" 같은 표기도 대응
+          const priceMatch = String(priceText).match(/\d+/);
+          const price = priceMatch ? Math.max(1, parseInt(priceMatch[0], 10)) : 1;
+
+          rewardIndex++;
           currentPage.rewards.push({
-            id: `p${pageCount}_${idx}`,
+            id: `p${currentPage.page}_${rewardIndex}`,
             name: rewardName,
-            price: price,
+            price,
             defaultCosts: { "FD": price },
             icon: iconSrc
           });
-
-          let isPageEnd = false;
-          cells.forEach(cell => {
-            if (cell.style.borderBottom && cell.style.borderBottom.includes("2px")) {
-              isPageEnd = true;
-            }
-          });
-
-          if (isPageEnd) {
-            parsedPages.push(currentPage);
-            pageCount++;
-            currentPage = { page: pageCount, req: "", rewards: [] };
-          }
         });
 
-        if (currentPage.rewards.length > 0) {
-          parsedPages.push(currentPage);
-        }
+        // 보상이 없는 페이지 제거
+        const validPages = parsedPages.filter(p => p.rewards.length > 0);
 
-        if (parsedPages.length > 0) {
-          roadmapPages = parsedPages;
+        if (validPages.length > 0) {
+          roadmapPages = validPages;
+          console.info(`BattlePass 파싱 완료: ${validPages.length}개 페이지, ${rewardIndex}개 보상`);
+        } else {
+          console.warn("BattlePass 보상 데이터를 찾지 못했습니다. 기본 데이터를 유지합니다.");
         }
       } catch (err) {
-        console.warn("Fandom Wiki fetch failed, fallback to default.", err);
+        console.warn("Fandom Wiki fetch/parse failed, fallback to default.", err);
       }
     }
-    
+
     // 3. 로드맵 UI 렌더링 (2열 배치 및 클릭으로 수령 처리)
     function renderRoadmap() {
       const container = document.getElementById("roadmapContainer");

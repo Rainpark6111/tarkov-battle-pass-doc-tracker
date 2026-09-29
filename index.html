@@ -686,72 +686,40 @@
       });
     }
 
-    // 팬덤 위키 데이터 파싱 (안정성 강화 버전)
+    // 팬덤 위키 데이터 파싱
     async function fetchFandomBattlePass() {
       try {
-        // allorigins 프록시 사용 시 json 형태로 받아 원문 데이터 디코딩 처리
+        const corsProxy = "https://api.allorigins.win/raw?url=";
         const targetUrl = encodeURIComponent("https://escapefromtarkov.fandom.com/wiki/BattlePass");
-        const res = await fetch(`https://api.allorigins.win/get?url=${targetUrl}`);
+        const res = await fetch(corsProxy + targetUrl);
         if (!res.ok) return;
-    
-        const data = await res.json();
-        if (!data || !data.contents) return;
-    
+
+        const htmlText = await res.text();
         const parser = new DOMParser();
-        const doc = parser.parseFromString(data.contents, "text/html");
-    
+        const doc = parser.parseFromString(htmlText, "text/html");
+
         const parsedPages = [];
         let currentPage = { page: 1, req: "", rewards: [] };
         let pageCount = 1;
-    
-        // wiki/BattlePass 내의 wikitable 조회
+
         const tables = doc.querySelectorAll("table.wikitable");
         if (tables.length === 0) return;
-    
-        // 데이터가 있는 테이블 검색 (보통 첫 번째 또는 두 번째 wikitable)
-        let targetTable = null;
-        for (const table of tables) {
-          if (table.querySelectorAll("tr").length > 2) {
-            targetTable = table;
-            break;
-          }
-        }
-        if (!targetTable) return;
-    
-        const rows = targetTable.querySelectorAll("tr");
-    
+
+        const targetTable = tables[0];
+        const rows = targetTable.querySelectorAll("tbody tr");
+
         rows.forEach((tr, idx) => {
+          if (idx === 0) return;
+
           const cells = tr.querySelectorAll("th, td");
-          
-          // 유효하지 않은 행 또는 헤더 행 제외
           if (cells.length < 3) return;
-    
-          // 이미지 요소 찾기
-          const imgEl = tr.querySelector("img");
-          const iconSrc = imgEl ? (imgEl.getAttribute("data-src") || imgEl.getAttribute("src") || "") : "";
-    
-          // 텍스트 및 가격 추출 (셀 전체 텍스트 기반 안전 접근)
-          let rewardName = "";
-          let price = 1;
-    
-          // 보통 2번째 또는 3번째 셀에 이름이 위치
-          const textCells = Array.from(cells).map(c => c.textContent.trim()).filter(Boolean);
-          if (textCells.length > 0) {
-            rewardName = textCells[1] || textCells[0];
-            
-            // 숫자(가격) 추출
-            const lastText = textCells[textCells.length - 1];
-            const parsedPrice = parseInt(lastText, 10);
-            if (!isNaN(parsedPrice)) {
-              price = parsedPrice;
-            }
-          }
-    
-          // 유효한 이름이 없거나 헤더성 문자열인 경우 스킵
-          if (!rewardName || rewardName.toLowerCase().includes("reward") || rewardName.toLowerCase().includes("item")) {
-            return;
-          }
-    
+
+          const imgEl = cells[1]?.querySelector("img");
+          const iconSrc = imgEl ? (imgEl.getAttribute("data-src") || imgEl.src) : "";
+          const rewardName = cells[2]?.textContent?.trim() || `Reward ${idx}`;
+          const priceText = cells[cells.length - 1]?.textContent?.trim() || "1";
+          const price = parseInt(priceText, 10) || 1;
+
           currentPage.rewards.push({
             id: `p${pageCount}_${idx}`,
             name: rewardName,
@@ -759,28 +727,25 @@
             defaultCosts: { "FD": price },
             icon: iconSrc
           });
-    
-          // 페이지 구분선/경계 체크
+
           let isPageEnd = false;
           cells.forEach(cell => {
-            const borderStyle = cell.style?.borderBottom || "";
-            if (borderStyle.includes("2px") || cell.classList.contains("page-end")) {
+            if (cell.style.borderBottom && cell.style.borderBottom.includes("2px")) {
               isPageEnd = true;
             }
           });
-    
-          // 일정한 개수(예: 4개)마다 페이지 분할 보장
-          if (isPageEnd || currentPage.rewards.length >= 4) {
+
+          if (isPageEnd) {
             parsedPages.push(currentPage);
             pageCount++;
             currentPage = { page: pageCount, req: "", rewards: [] };
           }
         });
-    
+
         if (currentPage.rewards.length > 0) {
           parsedPages.push(currentPage);
         }
-    
+
         if (parsedPages.length > 0) {
           roadmapPages = parsedPages;
         }
@@ -788,7 +753,7 @@
         console.warn("Fandom Wiki fetch failed, fallback to default.", err);
       }
     }
-
+    
     // 3. 로드맵 UI 렌더링 (2열 배치 및 클릭으로 수령 처리)
     function renderRoadmap() {
       const container = document.getElementById("roadmapContainer");

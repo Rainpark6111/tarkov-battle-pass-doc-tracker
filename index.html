@@ -758,29 +758,29 @@
 
     // 표시 순서: 회계 - PMC - 프로젝트 - 설계도 - 테스트 - 사용자 - 의료 - 장비
     const DOCS_DATA = {
-      FD:   { name: "회계 문서",     en: "Financial", file: "FD.webp" },
+      Fin:   { name: "회계 문서",     en: "Financial", file: "FD.webp" },
       PMC:  { name: "PMC 인사 기록", en: "PMC personnel",    file: "PMC.webp" },
-      PD:   { name: "프로젝트 문서", en: "Project",   file: "PD.webp" },
-      BP:   { name: "설계도",        en: "Blueprints",          file: "BP.webp" },
-      TD:   { name: "테스트 문서",   en: "Test",      file: "TD.webp" },
-      UD:   { name: "사용자 문서",   en: "User",      file: "UD.webp" },
-      MD:   { name: "의료 문서",     en: "Medical",   file: "MD.webp" },
+      Proj:   { name: "프로젝트 문서", en: "Project",   file: "PD.webp" },
+      Blue:   { name: "설계도",        en: "Blueprints",          file: "BP.webp" },
+      Test:   { name: "테스트 문서",   en: "Test",      file: "TD.webp" },
+      User:   { name: "사용자 문서",   en: "User",      file: "UD.webp" },
+      Med:   { name: "의료 문서",     en: "Medical",   file: "MD.webp" },
       Tech: { name: "장비 문서",     en: "Technical", file: "Tech.webp" }
     };
 
     const MAPS_DATA = [
-      { name: "세관 (Customs)",          docs: ["FD", "PD"] },
-      { name: "타르코프 시내 (Streets of Tarkov)", docs: ["FD", "UD"] },
-      { name: "인터체인지 (Interchange)",    docs: ["FD", "BP"] },
-      { name: "리저브 (Reserve)",        docs: ["PMC", "PD"] },
+      { name: "세관 (Customs)",          docs: ["Fin", "Proj"] },
+      { name: "타르코프 시내 (Streets of Tarkov)", docs: ["Fin", "User"] },
+      { name: "인터체인지 (Interchange)",    docs: ["Fin", "Blue"] },
+      { name: "리저브 (Reserve)",        docs: ["PMC", "Proj"] },
       { name: "등대 (Lighthouse)",          docs: ["PMC", "Tech"] },
-      { name: "쇄빙선 (Icebreaker)",        docs: ["PMC", "TD"] },
-      { name: "공장 (Factory)",          docs: ["PD", "BP"] },
-      { name: "미궁 (The Labyrinth)",          docs: ["BP", "MD"] },
-      { name: "해안선 (Shoreline)",        docs: ["TD", "Tech"] },
-      { name: "삼림 (Woods)",          docs: ["TD", "Tech"] },
-      { name: "그라운드 제로 (Ground Zero)", docs: ["UD", "MD"] },
-      { name: "실험실 (The Lab)",        docs: ["UD", "MD"] }
+      { name: "쇄빙선 (Icebreaker)",        docs: ["PMC", "Test"] },
+      { name: "공장 (Factory)",          docs: ["Proj", "Blue"] },
+      { name: "미궁 (The Labyrinth)",          docs: ["Blue", "Med"] },
+      { name: "해안선 (Shoreline)",        docs: ["Test", "Tech"] },
+      { name: "삼림 (Woods)",          docs: ["Test", "Tech"] },
+      { name: "그라운드 제로 (Ground Zero)", docs: ["User", "Med"] },
+      { name: "실험실 (The Lab)",        docs: ["User", "Med"] }
     ];
 
     // Fandom 파싱 실패 시 사용할 기본 데이터

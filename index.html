@@ -1092,7 +1092,7 @@
         if (month === undefined || !day || !year) continue;
 
         // UTC+3의 23:59:59 = UTC 20:59:59
-        return Date.UTC(year, month, day, 20, 59, 59, 999);
+        return Date.UTC(year, month, day, 9, 0, 0, 0);
       }
 
       return null;

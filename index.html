@@ -109,12 +109,12 @@
       letter-spacing: 0;
     }
 
-    /* ===== HEADER RIGHT (RESET BUTTON + COUNTDOWN) ===== */
+    /* ===== HEADER RIGHT (RESET BUTTON + PROGRESS + COUNTDOWN) ===== */
     .header-right {
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: 32px;
     }
 
     .reset-progress-btn {
@@ -136,13 +136,45 @@
       color: #fff;
     }
 
+    /* ===== PROGRESS ===== */
+    .progress-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .progress-title {
+      font-size: 0.58rem;
+      color: rgba(120, 255, 150, 0.7);
+      letter-spacing: 1.5px;
+      margin-bottom: 1px;
+      text-transform: uppercase;
+    }
+
+    #progressCount {
+      color: #7dff9f;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 2px #fff, 0 0 5px rgba(93,255,138,.85), 0 0 9px rgba(93,255,138,.85), 0 0 15px rgba(93,255,138,.7), 0 0 24px rgba(93,255,138,.4);
+      animation: progressTextGlow 1.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes progressTextGlow {
+      from { text-shadow: 0 0 2px #fff, 0 0 5px rgba(93,255,138,.85), 0 0 9px rgba(93,255,138,.85), 0 0 15px rgba(93,255,138,.7), 0 0 24px rgba(93,255,138,.4); }
+      to   { text-shadow: 0 0 2px #fff, 0 0 6px #fff, 0 0 10px rgba(93,255,138,.9), 0 0 18px rgba(93,255,138,.9), 0 0 28px rgba(93,255,138,.55); }
+    }
+
     /* ===== SEASON COUNTDOWN ===== */
     .season-countdown {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
       justify-content: center;
-      min-width: 180px;
       user-select: none;
     }
 
@@ -160,6 +192,7 @@
       font-weight: 700;
       letter-spacing: 1.5px;
       white-space: nowrap;
+      font-variant-numeric: tabular-nums;
       text-shadow: 0 0 2px #fff, 0 0 5px var(--timer-glow), 0 0 9px var(--timer-glow), 0 0 15px rgba(93,211,255,.7), 0 0 24px rgba(93,211,255,.4);
       animation: countdownGlow 1.8s ease-in-out infinite alternate;
     }
@@ -575,6 +608,11 @@
     <div class="header-right">
       <button class="reset-progress-btn" id="resetProgressBtn" title="클레임 상태와 문서 보유량을 초기화합니다">초기화</button>
 
+      <div class="progress-box">
+        <div class="progress-title">PROGRESS</div>
+        <div id="progressCount">0 / 0</div>
+      </div>
+
       <div class="season-countdown">
         <div class="season-countdown-title">SEASON TIME REMAINING</div>
         <div id="seasonCountdown">00 : 00 : 00 : 00</div>
@@ -634,14 +672,15 @@
        DATA
     ========================================================= */
 
+    // 표시 순서: 회계 - PMC - 프로젝트 - 설계도 - 테스트 - 사용자 - 의료 - 장비
     const DOCS_DATA = {
       FD:   { name: "회계 문서",     file: "FD.webp" },
-      PD:   { name: "프로젝트 문서", file: "PD.webp" },
-      TD:   { name: "테스트 문서",   file: "TD.webp" },
-      MD:   { name: "의료 문서",     file: "MD.webp" },
       PMC:  { name: "PMC 인사 문서", file: "PMC.webp" },
+      PD:   { name: "프로젝트 문서", file: "PD.webp" },
       BP:   { name: "설계도",        file: "BP.webp" },
+      TD:   { name: "테스트 문서",   file: "TD.webp" },
       UD:   { name: "사용자 문서",   file: "UD.webp" },
+      MD:   { name: "의료 문서",     file: "MD.webp" },
       Tech: { name: "장비 문서",     file: "Tech.webp" }
     };
 
@@ -1507,10 +1546,33 @@
     });
 
     /* =========================================================
+       PROGRESS (개별 보상 기준 클레임 수 / 전체 보상 수)
+    ========================================================= */
+
+    function updateProgress() {
+      const countEl = $("progressCount");
+      if (!countEl) return;
+
+      let total = 0;
+      let claimed = 0;
+
+      roadmapPages.forEach(p => {
+        p.rewards.forEach(r => {
+          total++;
+          if (claimedRewards[r.id]) claimed++;
+        });
+      });
+
+      countEl.textContent = `${claimed} / ${total}`;
+    }
+
+    /* =========================================================
        REQUIREMENT CALCULATION
     ========================================================= */
 
     function calculateRequirements() {
+      updateProgress();
+
       const totals = {};
       Object.keys(DOCS_DATA).forEach(code => (totals[code] = 0));
 

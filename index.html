@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tarkov Battle Pass Tracker</title>
+
   <style>
     :root {
       --bg-color: #121417;
@@ -14,8 +15,12 @@
       --highlight-color: #ff9800;
       --text-color: #e0e0e0;
       --text-dim: #9e9e9e;
+
       --claimed-bg: rgba(76, 175, 80, 0.25);
       --claimed-border: #4caf50;
+
+      --timer-color: #7ddcff;
+      --timer-glow: rgba(93, 211, 255, 0.85);
     }
 
     * {
@@ -34,7 +39,10 @@
       overflow: hidden;
     }
 
-    /* Header (1번) */
+    /* =========================================================
+       HEADER
+    ========================================================= */
+
     header {
       background-color: var(--panel-bg);
       border-bottom: 1px solid var(--border-color);
@@ -56,27 +64,32 @@
       font-weight: 600;
       color: var(--accent-color);
       letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
     }
+
+    /* =========================================================
+       SEASON NAME GLOW
+    ========================================================= */
 
     .season-name {
       color: #ffffff;
       font-weight: 700;
-    
-      /* 글자 자체를 선명하게 */
       opacity: 1;
       filter: none;
-    
-      /* 강하지만 글자를 뭉개지 않는 근접형 광원 */
+
       text-shadow:
         0 0 2px #ffffff,
         0 0 4px #ffffff,
         0 0 7px rgba(255, 255, 255, 0.95),
         0 0 12px rgba(255, 255, 255, 0.8),
         0 0 18px rgba(255, 255, 255, 0.55);
-    
+
       animation: seasonGlow 1.8s ease-in-out infinite alternate;
     }
-    
+
     @keyframes seasonGlow {
       from {
         color: #ffffff;
@@ -87,7 +100,7 @@
           0 0 12px rgba(255, 255, 255, 0.8),
           0 0 18px rgba(255, 255, 255, 0.55);
       }
-    
+
       to {
         color: #ffffff;
         text-shadow:
@@ -107,14 +120,79 @@
       letter-spacing: 0;
     }
 
-    /* Main Content Layout */
+    /* =========================================================
+       SEASON COUNTDOWN
+    ========================================================= */
+
+    .season-countdown {
+      margin-left: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      min-width: 180px;
+      user-select: none;
+    }
+
+    .season-countdown-title {
+      font-size: 0.58rem;
+      color: rgba(125, 220, 255, 0.7);
+      letter-spacing: 1.5px;
+      margin-bottom: 1px;
+      text-transform: uppercase;
+    }
+
+    #seasonCountdown {
+      color: var(--timer-color);
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+
+      text-shadow:
+        0 0 2px #ffffff,
+        0 0 5px var(--timer-glow),
+        0 0 9px var(--timer-glow),
+        0 0 15px rgba(93, 211, 255, 0.7),
+        0 0 24px rgba(93, 211, 255, 0.4);
+
+      animation: countdownGlow 1.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes countdownGlow {
+      from {
+        text-shadow:
+          0 0 2px #ffffff,
+          0 0 5px var(--timer-glow),
+          0 0 9px var(--timer-glow),
+          0 0 15px rgba(93, 211, 255, 0.7),
+          0 0 24px rgba(93, 211, 255, 0.4);
+      }
+
+      to {
+        text-shadow:
+          0 0 2px #ffffff,
+          0 0 6px #ffffff,
+          0 0 10px var(--timer-glow),
+          0 0 18px var(--timer-glow),
+          0 0 28px rgba(93, 211, 255, 0.55);
+      }
+    }
+
+    /* =========================================================
+       MAIN
+    ========================================================= */
+
     .main-container {
       display: flex;
       flex: 1;
       overflow: hidden;
     }
 
-    /* Left Sidebar: Map Selector (스크롤 제거 및 한눈에 보기) */
+    /* =========================================================
+       SIDEBAR
+    ========================================================= */
+
     .sidebar {
       width: 280px;
       background-color: var(--panel-bg);
@@ -123,7 +201,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      overflow: hidden; /* 스크롤 제거 */
+      overflow: hidden;
       flex-shrink: 0;
     }
 
@@ -145,7 +223,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      flex: 1; /* 높이 균등 분배 */
+      flex: 1;
       min-height: 0;
     }
 
@@ -154,7 +232,8 @@
       background-color: #323741;
     }
 
-    .map-card.active, .map-card.highlight {
+    .map-card.active,
+    .map-card.highlight {
       border-color: var(--highlight-color);
       box-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
       background-color: #3a3226;
@@ -180,7 +259,10 @@
       border-radius: 3px;
     }
 
-    /* Center Content */
+    /* =========================================================
+       CENTER
+    ========================================================= */
+
     .content-area {
       flex: 1;
       display: flex;
@@ -188,62 +270,191 @@
       overflow: hidden;
     }
 
-    /* Central Roadmap Scroll */
+    /* =========================================================
+       ROADMAP
+    ========================================================= */
+
     .roadmap-scroll {
       flex: 1;
       min-height: 0;
+
       overflow-x: auto;
       overflow-y: hidden;
+
       padding: 12px 15px;
+
       display: flex;
       gap: 15px;
+
       background-color: #16181d;
+
+      /*
+       * 마우스 휠 좌우 스크롤을 부드럽게 사용하기 위한 설정
+       */
+      scroll-behavior: smooth;
+
+      /*
+       * 가로 스크롤바를 조금 더 눈에 띄게 표시
+       */
+      scrollbar-color: #555d6d #1b1e23;
+      scrollbar-width: auto;
     }
+
+    .roadmap-scroll::-webkit-scrollbar {
+      height: 10px;
+    }
+
+    .roadmap-scroll::-webkit-scrollbar-track {
+      background: #1b1e23;
+      border-radius: 5px;
+    }
+
+    .roadmap-scroll::-webkit-scrollbar-thumb {
+      background: #555d6d;
+      border-radius: 5px;
+    }
+
+    .roadmap-scroll::-webkit-scrollbar-thumb:hover {
+      background: #70798a;
+    }
+
+    /* =========================================================
+       PAGE COLUMN
+    ========================================================= */
 
     .roadmap-column {
       background-color: var(--panel-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
+
       width: 320px;
       min-width: 320px;
+
       display: flex;
       flex-direction: column;
       height: 100%;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
     }
+
+    /*
+     * 페이지 전체가 클릭 가능한 영역이라는 것을 시각적으로 표시
+     */
+    .roadmap-column.page-toggleable {
+      cursor: pointer;
+    }
+
+    .roadmap-column.page-toggleable:hover {
+      border-color: #596271;
+    }
+
+    /*
+     * 해당 Page 전체가 획득 처리된 상태
+     */
+    .roadmap-column.page-claimed {
+      border-color: rgba(76, 175, 80, 0.75);
+      box-shadow:
+        0 0 8px rgba(76, 175, 80, 0.18),
+        inset 0 0 12px rgba(76, 175, 80, 0.06);
+    }
+
+    /* =========================================================
+       PAGE HEADER
+    ========================================================= */
 
     .column-header {
       background-color: var(--card-bg);
       padding: 10px;
+
       border-bottom: 1px solid var(--border-color);
+
       display: flex;
       justify-content: space-between;
       align-items: center;
+
       font-weight: bold;
       color: var(--accent-color);
+
+      cursor: pointer;
+      user-select: none;
+
+      transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
     }
 
-    /* 세로 스크롤 제거 및 2열 Grid 적용 */
+    .column-header:hover {
+      background-color: #323741;
+    }
+
+    .page-title-area {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .page-claim-indicator {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #555d6d;
+      transition: all 0.2s ease;
+    }
+
+    .roadmap-column.page-claimed .page-claim-indicator {
+      background: #4caf50;
+      box-shadow:
+        0 0 5px rgba(76, 175, 80, 0.8),
+        0 0 10px rgba(76, 175, 80, 0.45);
+    }
+
+    .page-status-text {
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .roadmap-column.page-claimed .page-status-text {
+      color: #6fd676;
+    }
+
+    /* =========================================================
+       COLUMN BODY
+    ========================================================= */
+
     .column-body {
       padding: 10px;
+
       display: grid;
-      grid-template-columns: 1fr 1fr; /* 2열 배치 */
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
-      overflow-y: hidden; /* 컬럼 내 세로 스크롤 제거 */
+
+      overflow-y: hidden;
+
       flex: 1;
       align-content: start;
     }
 
-    /* 보상 카드 (클릭 가능) */
+    /* =========================================================
+       REWARD CARD
+    ========================================================= */
+
     .reward-card {
       background-color: var(--card-bg);
       border: 2px solid var(--border-color);
       border-radius: 6px;
       padding: 8px;
+
       position: relative;
+
       display: flex;
       flex-direction: column;
       gap: 6px;
+
       cursor: pointer;
+
       transition: all 0.2s ease;
       user-select: none;
     }
@@ -252,11 +463,12 @@
       border-color: #555d6d;
     }
 
-    /* 수령 완료 상태 (초록색 불투명 음영) */
     .reward-card.claimed {
       background-color: var(--claimed-bg);
       border-color: var(--claimed-border);
-      box-shadow: inset 0 0 10px rgba(76, 175, 80, 0.3);
+      box-shadow:
+        inset 0 0 10px rgba(76, 175, 80, 0.3),
+        0 0 4px rgba(76, 175, 80, 0.15);
     }
 
     .reward-title-row {
@@ -269,9 +481,11 @@
       font-weight: 600;
       font-size: 0.8rem;
       color: #fff;
+
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+
       max-width: 100px;
     }
 
@@ -289,11 +503,14 @@
     .reward-img-container {
       width: 100%;
       height: 70px;
+
       background-color: rgba(0,0,0,0.3);
       border-radius: 4px;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       overflow: hidden;
     }
 
@@ -315,20 +532,28 @@
       border: 1px solid var(--border-color);
       padding: 1px 4px;
       border-radius: 3px;
+
       display: flex;
       align-items: center;
       gap: 3px;
     }
 
-    /* Bottom Panel: Inventory & Requirements */
+    /* =========================================================
+       BOTTOM PANEL
+    ========================================================= */
+
     .bottom-panel {
       height: 220px;
+
       background-color: var(--panel-bg);
       border-top: 1px solid var(--border-color);
+
       padding: 10px 20px;
+
       display: flex;
       flex-direction: column;
       gap: 6px;
+
       flex-shrink: 0;
       min-height: 0;
     }
@@ -343,8 +568,10 @@
       display: grid;
       grid-template-columns: repeat(8, minmax(0, 1fr));
       gap: 10px;
+
       flex: 1;
       min-height: 0;
+
       align-items: center;
     }
 
@@ -352,14 +579,18 @@
       background-color: var(--card-bg);
       border: 2px solid var(--border-color);
       border-radius: 6px;
+
       padding: 8px;
       height: 156px;
       min-height: 0;
+
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+
       cursor: pointer;
+
       transition: all 0.2s ease;
     }
 
@@ -374,6 +605,7 @@
       flex-direction: row;
       align-items: center;
       gap: 10px;
+
       width: 100%;
       justify-content: center;
     }
@@ -393,15 +625,18 @@
       word-break: keep-all;
     }
 
-    /* 필요량/보유량 UI 커스텀 (크기 확대 및 중앙 정렬) */
     .doc-counters {
       width: 100%;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       gap: 12px;
       margin-top: 4px;
+
       background: rgba(0,0,0,0.2);
+
       padding: 4px;
       border-radius: 4px;
     }
@@ -421,11 +656,15 @@
     .doc-input {
       width: 48px;
       height: 26px;
+
       background-color: #121417;
       border: 1px solid var(--border-color);
+
       color: #fff;
       text-align: center;
+
       border-radius: 4px;
+
       font-size: 0.95rem;
       font-weight: bold;
     }
@@ -434,6 +673,7 @@
       font-size: 0.8rem;
       color: #ff5252;
       font-weight: bold;
+
       display: flex;
       align-items: center;
     }
@@ -448,10 +688,17 @@
       }
     }
 
-    /* Modal */
+    /* =========================================================
+       MODAL
+    ========================================================= */
+
     .modal-overlay {
       position: fixed;
-      top:0; left:0; width:100%; height:100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+
       background: rgba(0,0,0,0.7);
       display: none;
       align-items: center;
@@ -463,10 +710,14 @@
       background-color: var(--panel-bg);
       border: 1px solid var(--accent-color);
       border-radius: 8px;
+
       padding: 20px;
+
       width: 420px;
+
       display: flex;
       flex-direction: column;
+
       gap: 15px;
     }
 
@@ -486,7 +737,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+
       background-color: var(--card-bg);
+
       padding: 6px 10px;
       border-radius: 4px;
       border: 1px solid var(--border-color);
@@ -501,10 +754,13 @@
 
     .modal-input-group input {
       width: 45px;
+
       background-color: #121417;
       border: 1px solid var(--border-color);
+
       color: #fff;
       text-align: center;
+
       padding: 2px;
       border-radius: 3px;
     }
@@ -517,632 +773,2857 @@
 
     .btn {
       padding: 6px 12px;
+
       border: none;
       border-radius: 4px;
+
       cursor: pointer;
+
       font-weight: bold;
       font-size: 0.8rem;
     }
 
-    .btn-save { background-color: #4caf50; color: #fff; }
-    .btn-cancel { background-color: #f44336; color: #fff; }
-    .btn-reset { background-color: #555; color: #fff; }
+    .btn-save {
+      background-color: #4caf50;
+      color: #fff;
+    }
+
+    .btn-cancel {
+      background-color: #f44336;
+      color: #fff;
+    }
+
+    .btn-reset {
+      background-color: #555;
+      color: #fff;
+    }
   </style>
 </head>
+
 <body>
 
-  <!-- 1. 좌상단 로고 및 제목 -->
+  <!-- =========================================================
+       HEADER
+  ========================================================== -->
+
   <header>
+
     <a href="https://www.escapefromtarkov.com/" target="_blank">
-      <img src="https://www.escapefromtarkov.com/build-eft-site/_nuxt/logo.WO0wViWU.webp" alt="Escape from Tarkov">
+      <img
+        src="https://www.escapefromtarkov.com/build-eft-site/_nuxt/logo.WO0wViWU.webp"
+        alt="Escape from Tarkov"
+      >
     </a>
-    <h1>Tarkov Battle Pass Tracker<span id="seasonName" class="season-name"></span></h1>
+
+    <h1>
+      Tarkov Battle Pass Tracker
+      <span id="seasonName" class="season-name"></span>
+    </h1>
+
+    <!-- 시즌 남은 시간 -->
+    <div class="season-countdown">
+      <div class="season-countdown-title">
+        SEASON TIME REMAINING
+      </div>
+
+      <div id="seasonCountdown">
+        00 : 00 : 00 : 00
+      </div>
+    </div>
+
   </header>
 
+  <!-- =========================================================
+       MAIN
+  ========================================================== -->
+
   <div class="main-container">
-    <!-- 2. 좌중단 : 맵 선택 (스크롤 제거) -->
+
+    <!-- =======================================================
+         LEFT SIDEBAR
+    ======================================================== -->
+
     <div class="sidebar" id="mapList">
       <h2>맵 목록</h2>
-      <!-- JS로 동적 생성 -->
     </div>
 
-    <!-- 중앙 영역 -->
+    <!-- =======================================================
+         CENTER
+    ======================================================== -->
+
     <div class="content-area">
-      <!-- 3. 중앙상단 : 배틀패스 보상 로드맵 (페이지별 2행 Grid) -->
-      <div class="roadmap-scroll" id="roadmapContainer">
-        <!-- JS로 동적 생성 -->
+
+      <!-- =====================================================
+           ROADMAP
+      ====================================================== -->
+
+      <div
+        class="roadmap-scroll"
+        id="roadmapContainer"
+        title="마우스 휠로 좌우 스크롤할 수 있습니다."
+      >
       </div>
 
-      <!-- 4. 중앙하단 : 보유 및 필요 재화 계산 -->
+      <!-- =====================================================
+           BOTTOM PANEL
+      ====================================================== -->
+
       <div class="bottom-panel">
-        <div class="panel-title">문서 보유량 및 필요 수량</div>
-        <div class="docs-grid" id="docsGrid">
-          <!-- JS로 동적 생성 -->
+
+        <div class="panel-title">
+          문서 보유량 및 필요 수량
         </div>
+
+        <div
+          class="docs-grid"
+          id="docsGrid"
+        >
+        </div>
+
       </div>
+
     </div>
+
   </div>
 
-  <!-- 편집 모달 -->
-  <div class="modal-overlay" id="editModal">
+  <!-- =========================================================
+       EDIT MODAL
+  ========================================================== -->
+
+  <div
+    class="modal-overlay"
+    id="editModal"
+  >
+
     <div class="modal">
-      <h3 id="modalTitle">Edit Costs</h3>
-      <div style="font-size: 0.8rem; color: var(--text-dim); text-align: center;" id="modalPriceInfo">
-        해당 보상의 최대 재화 합계: <span id="maxPriceVal">0</span>
+
+      <h3 id="modalTitle">
+        Edit Costs
+      </h3>
+
+      <div
+        style="
+          font-size: 0.8rem;
+          color: var(--text-dim);
+          text-align: center;
+        "
+        id="modalPriceInfo"
+      >
+        해당 보상의 최대 재화 합계:
+        <span id="maxPriceVal">0</span>
       </div>
-      <div class="modal-grid" id="modalGrid">
-        <!-- JS로 동적 생성 -->
+
+      <div
+        class="modal-grid"
+        id="modalGrid"
+      >
       </div>
+
       <div class="modal-actions">
-        <button class="btn btn-reset" id="modalResetBtn">기본값</button>
-        <button class="btn btn-cancel" id="modalCancelBtn">취소</button>
-        <button class="btn btn-save" id="modalSaveBtn">저장</button>
+
+        <button
+          class="btn btn-reset"
+          id="modalResetBtn"
+        >
+          기본값
+        </button>
+
+        <button
+          class="btn btn-cancel"
+          id="modalCancelBtn"
+        >
+          취소
+        </button>
+
+        <button
+          class="btn btn-save"
+          id="modalSaveBtn"
+        >
+          저장
+        </button>
+
       </div>
+
     </div>
+
   </div>
 
   <script>
-    // 문서 정의 (한글 표기 및 코드/파일명 매핑)
+
+    /* =========================================================
+       DOCUMENT DATA
+    ========================================================== */
+
     const DOCS_DATA = {
-      "FD": { name: "회계 문서", file: "FD.webp" },
-      "PD": { name: "프로젝트 문서", file: "PD.webp" },
-      "TD": { name: "테스트 문서", file: "TD.webp" },
-      "MD": { name: "의료 문서", file: "MD.webp" },
-      "PMC": { name: "PMC 인사 문서", file: "PMC.webp" },
-      "BP": { name: "설계도", file: "BP.webp" },
-      "UD": { name: "사용자 문서", file: "UD.webp" },
-      "Tech": { name: "장비 문서", file: "Tech.webp" }
+
+      "FD": {
+        name: "회계 문서",
+        file: "FD.webp"
+      },
+
+      "PD": {
+        name: "프로젝트 문서",
+        file: "PD.webp"
+      },
+
+      "TD": {
+        name: "테스트 문서",
+        file: "TD.webp"
+      },
+
+      "MD": {
+        name: "의료 문서",
+        file: "MD.webp"
+      },
+
+      "PMC": {
+        name: "PMC 인사 문서",
+        file: "PMC.webp"
+      },
+
+      "BP": {
+        name: "설계도",
+        file: "BP.webp"
+      },
+
+      "UD": {
+        name: "사용자 문서",
+        file: "UD.webp"
+      },
+
+      "Tech": {
+        name: "장비 문서",
+        file: "Tech.webp"
+      }
+
     };
 
-    // 맵 정의
+
+    /* =========================================================
+       MAP DATA
+    ========================================================== */
+
     const MAPS_DATA = [
-      { name: "세관", docs: ["FD", "PD"] },
-      { name: "타르코프 시내", docs: ["FD", "UD"] },
-      { name: "인터체인지", docs: ["FD", "BP"] },
-      { name: "리저브", docs: ["PMC", "PD"] },
-      { name: "등대", docs: ["PMC", "Tech"] },
-      { name: "쇄빙선", docs: ["PMC", "TD"] },
-      { name: "공장", docs: ["PD", "BP"] },
-      { name: "미궁", docs: ["BP", "MD"] },
-      { name: "해안선", docs: ["TD", "Tech"] },
-      { name: "삼림", docs: ["TD", "Tech"] },
-      { name: "그라운드 제로", docs: ["UD", "MD"] },
-      { name: "실험실", docs: ["UD", "MD"] }
+
+      {
+        name: "세관",
+        docs: ["FD", "PD"]
+      },
+
+      {
+        name: "타르코프 시내",
+        docs: ["FD", "UD"]
+      },
+
+      {
+        name: "인터체인지",
+        docs: ["FD", "BP"]
+      },
+
+      {
+        name: "리저브",
+        docs: ["PMC", "PD"]
+      },
+
+      {
+        name: "등대",
+        docs: ["PMC", "Tech"]
+      },
+
+      {
+        name: "쇄빙선",
+        docs: ["PMC", "TD"]
+      },
+
+      {
+        name: "공장",
+        docs: ["PD", "BP"]
+      },
+
+      {
+        name: "미궁",
+        docs: ["BP", "MD"]
+      },
+
+      {
+        name: "해안선",
+        docs: ["TD", "Tech"]
+      },
+
+      {
+        name: "삼림",
+        docs: ["TD", "Tech"]
+      },
+
+      {
+        name: "그라운드 제로",
+        docs: ["UD", "MD"]
+      },
+
+      {
+        name: "실험실",
+        docs: ["UD", "MD"]
+      }
+
     ];
 
-    // 유저 로컬 스토리지 데이터
-    let userCosts = JSON.parse(localStorage.getItem("eft_user_costs") || "{}");
-    let userInventory = JSON.parse(localStorage.getItem("eft_user_inventory") || "{}");
-    let claimedRewards = JSON.parse(localStorage.getItem("eft_claimed_rewards") || "{}");
 
-    // 기본 로드맵 데이터
+    /* =========================================================
+       LOCAL STORAGE
+    ========================================================== */
+
+    let userCosts =
+      JSON.parse(
+        localStorage.getItem("eft_user_costs") || "{}"
+      );
+
+    let userInventory =
+      JSON.parse(
+        localStorage.getItem("eft_user_inventory") || "{}"
+      );
+
+    let claimedRewards =
+      JSON.parse(
+        localStorage.getItem("eft_claimed_rewards") || "{}"
+      );
+
+
+    /* =========================================================
+       ROADMAP DATA
+    ========================================================== */
+
     let roadmapPages = [
+
       {
         page: 1,
+
         req: "4/5",
+
         rewards: [
-          { id: "p1_1", name: "Dogtag", price: 5, defaultCosts: { "FD": 1 }, icon: "" },
-          { id: "p1_2", name: "TarCoin", price: 3, defaultCosts: { "PD": 2, "BP": 1 }, icon: "" },
-          { id: "p1_3", name: "Poster", price: 3, defaultCosts: { "TD": 2, "UD": 1 }, icon: "" },
-          { id: "p1_4", name: "Crate", price: 3, defaultCosts: { "BP": 2, "FD": 1 }, icon: "" }
+
+          {
+            id: "p1_1",
+            name: "Dogtag",
+            price: 5,
+            defaultCosts: {
+              "FD": 1
+            },
+            icon: ""
+          },
+
+          {
+            id: "p1_2",
+            name: "TarCoin",
+            price: 3,
+            defaultCosts: {
+              "PD": 2,
+              "BP": 1
+            },
+            icon: ""
+          },
+
+          {
+            id: "p1_3",
+            name: "Poster",
+            price: 3,
+            defaultCosts: {
+              "TD": 2,
+              "UD": 1
+            },
+            icon: ""
+          },
+
+          {
+            id: "p1_4",
+            name: "Crate",
+            price: 3,
+            defaultCosts: {
+              "BP": 2,
+              "FD": 1
+            },
+            icon: ""
+          }
+
         ]
       }
+
     ];
 
+
+    /* =========================================================
+       STATE
+    ========================================================== */
+
     let selectedMap = null;
+
     let selectedDoc = null;
+
     let currentEditReward = null;
 
-    // 초기화 함수
+    /*
+     * 시즌 종료 시각.
+     *
+     * 값은 UTC timestamp(ms)로 저장한다.
+     */
+    let seasonEndTimestamp = null;
+
+    /*
+     * 카운트다운 interval
+     */
+    let countdownInterval = null;
+
+
+    /* =========================================================
+       INITIALIZATION
+    ========================================================== */
+
     async function init() {
+
       renderMapList();
+
       renderDocsGrid();
+
+      /*
+       * Fandom 데이터를 먼저 파싱한다.
+       *
+       * 시즌 정보도 여기서 같이 파싱된다.
+       */
       await fetchFandomBattlePass();
+
       renderRoadmap();
+
       calculateRequirements();
+
+      /*
+       * 마우스 휠 좌우 스크롤
+       */
+      setupHorizontalWheel();
+
+      /*
+       * 시즌 카운트다운 시작
+       */
+      startSeasonCountdown();
+
     }
 
-    // 2. 맵 목록 렌더링
+
+    /* =========================================================
+       MAP LIST
+    ========================================================== */
+
     function renderMapList() {
-      const mapListEl = document.getElementById("mapList");
-      mapListEl.innerHTML = "<h2>맵 목록</h2>";
+
+      const mapListEl =
+        document.getElementById("mapList");
+
+      mapListEl.innerHTML =
+        "<h2>맵 목록</h2>";
 
       MAPS_DATA.forEach(map => {
-        const card = document.createElement("div");
-        card.className = `map-card ${selectedMap === map.name ? 'active' : ''}`;
-        card.id = `map-${map.name}`;
-        
-        const docBadges = map.docs.map(code => `<span class="doc-badge">${DOCS_DATA[code].name}</span>`).join("");
+
+        const card =
+          document.createElement("div");
+
+        card.className =
+          `map-card ${
+            selectedMap === map.name
+              ? "active"
+              : ""
+          }`;
+
+        card.id =
+          `map-${map.name}`;
+
+        const docBadges =
+          map.docs
+            .map(code =>
+              `<span class="doc-badge">
+                ${DOCS_DATA[code].name}
+              </span>`
+            )
+            .join("");
+
         card.innerHTML = `
-          <div class="map-name">${map.name}</div>
-          <div class="map-docs">${docBadges}</div>
+
+          <div class="map-name">
+            ${map.name}
+          </div>
+
+          <div class="map-docs">
+            ${docBadges}
+          </div>
+
         `;
 
-        card.addEventListener("click", () => handleMapClick(map));
+        card.addEventListener(
+          "click",
+          () => handleMapClick(map)
+        );
+
         mapListEl.appendChild(card);
+
       });
+
     }
+
 
     function handleMapClick(map) {
+
       if (selectedMap === map.name) {
+
         selectedMap = null;
+
       } else {
+
         selectedMap = map.name;
+
       }
+
       selectedDoc = null;
+
       updateHighlights();
+
     }
+
 
     function handleDocClick(docCode) {
+
       if (selectedDoc === docCode) {
+
         selectedDoc = null;
+
       } else {
+
         selectedDoc = docCode;
+
       }
+
       selectedMap = null;
+
       updateHighlights();
+
     }
 
+
     function updateHighlights() {
+
       MAPS_DATA.forEach(map => {
-        const el = document.getElementById(`map-${map.name}`);
+
+        const el =
+          document.getElementById(
+            `map-${map.name}`
+          );
+
         if (!el) return;
-        el.classList.remove("active", "highlight");
-        
+
+        el.classList.remove(
+          "active",
+          "highlight"
+        );
+
         if (selectedMap === map.name) {
+
           el.classList.add("active");
-        } else if (selectedDoc && map.docs.includes(selectedDoc)) {
+
+        } else if (
+          selectedDoc &&
+          map.docs.includes(selectedDoc)
+        ) {
+
           el.classList.add("highlight");
+
         }
+
       });
 
+
       Object.keys(DOCS_DATA).forEach(code => {
-        const el = document.getElementById(`doc-item-${code}`);
+
+        const el =
+          document.getElementById(
+            `doc-item-${code}`
+          );
+
         if (!el) return;
+
         el.classList.remove("highlight");
 
         if (selectedDoc === code) {
+
           el.classList.add("highlight");
+
         } else if (selectedMap) {
-          const mapObj = MAPS_DATA.find(m => m.name === selectedMap);
-          if (mapObj && mapObj.docs.includes(code)) {
+
+          const mapObj =
+            MAPS_DATA.find(
+              m => m.name === selectedMap
+            );
+
+          if (
+            mapObj &&
+            mapObj.docs.includes(code)
+          ) {
+
             el.classList.add("highlight");
+
           }
+
         }
+
       });
+
     }
 
-    // 4. 보유 문서 및 필요 수량 UI 렌더링
+
+    /* =========================================================
+       DOCUMENT GRID
+    ========================================================== */
+
     function renderDocsGrid() {
-      const grid = document.getElementById("docsGrid");
+
+      const grid =
+        document.getElementById("docsGrid");
+
       grid.innerHTML = "";
 
       Object.keys(DOCS_DATA).forEach(code => {
-        const doc = DOCS_DATA[code];
-        const count = userInventory[code] || 0;
 
-        const item = document.createElement("div");
-        item.className = "doc-item";
-        item.id = `doc-item-${code}`;
+        const doc =
+          DOCS_DATA[code];
+
+        const count =
+          userInventory[code] || 0;
+
+        const item =
+          document.createElement("div");
+
+        item.className =
+          "doc-item";
+
+        item.id =
+          `doc-item-${code}`;
 
         item.innerHTML = `
+
           <div class="doc-icon-title">
-            <img src="${doc.file}" alt="${doc.name}" onerror="this.src='https://via.placeholder.com/70?text=${code}'">
-            <div class="doc-name">${doc.name}</div>
-          </div>
-          <div class="doc-counters">
-            <div class="doc-counter-group">
-              <span class="counter-label">보유:</span>
-              <input type="number" min="0" class="doc-input" value="${count}" data-code="${code}">
+
+            <img
+              src="${doc.file}"
+              alt="${doc.name}"
+              onerror="
+                this.src='https://via.placeholder.com/70?text=${code}'
+              "
+            >
+
+            <div class="doc-name">
+              ${doc.name}
             </div>
-            <div class="doc-req" id="req-${code}">필요: 0</div>
+
           </div>
+
+          <div class="doc-counters">
+
+            <div class="doc-counter-group">
+
+              <span class="counter-label">
+                보유:
+              </span>
+
+              <input
+                type="number"
+                min="0"
+                class="doc-input"
+                value="${count}"
+                data-code="${code}"
+              >
+
+            </div>
+
+            <div
+              class="doc-req"
+              id="req-${code}"
+            >
+              필요: 0
+            </div>
+
+          </div>
+
         `;
 
-        const input = item.querySelector(".doc-input");
-        input.addEventListener("change", (e) => {
-          userInventory[code] = parseInt(e.target.value) || 0;
-          localStorage.setItem("eft_user_inventory", JSON.stringify(userInventory));
-          calculateRequirements(); // 보유량 변경 시 필요량 차감 재계산
-        });
-        input.addEventListener("click", (e) => e.stopPropagation());
+        const input =
+          item.querySelector(".doc-input");
 
-        item.addEventListener("click", () => handleDocClick(code));
+        input.addEventListener(
+          "change",
+          e => {
+
+            userInventory[code] =
+              parseInt(e.target.value) || 0;
+
+            localStorage.setItem(
+              "eft_user_inventory",
+              JSON.stringify(userInventory)
+            );
+
+            calculateRequirements();
+
+          }
+        );
+
+        input.addEventListener(
+          "click",
+          e => e.stopPropagation()
+        );
+
+        item.addEventListener(
+          "click",
+          () => handleDocClick(code)
+        );
+
         grid.appendChild(item);
+
       });
+
     }
 
-    // 파싱된 페이지에서 시즌명 추출
-    function extractSeasonName(doc, htmlText) {
+
+    /* =========================================================
+       SEASON NAME PARSER
+    ========================================================== */
+
+    function extractSeasonName(
+      doc,
+      htmlText
+    ) {
+
       const candidates = [];
 
-      // 문서 제목 / heading / 일반 텍스트 순서로 후보 수집
-      if (doc.title) candidates.push(doc.title);
-      doc.querySelectorAll('h1, h2, h3, h4, .mw-parser-output p, .mw-parser-output div').forEach(el => {
-        const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
-        if (text) candidates.push(text);
-      });
-      candidates.push((doc.body?.innerText || '').replace(/\s+/g, ' '));
-
-      // 예: Season 1 - "KORD BREACH" / Season 1 - KORD BREACH
-      for (const candidate of candidates) {
-        const seasonNumber = candidate.match(/\bSeason\s+(\d+)\b/i)?.[1];
-        if (!seasonNumber) continue;
-
-        // 따옴표가 있는 경우: 시즌명만 정확히 추출
-        let match = candidate.match(/\bSeason\s+\d+\s*[-–—:]\s*[\"“”']([^\"“”']+)[\"“”']/i);
-        if (match) {
-          return `Season ${seasonNumber} - \"${match[1].trim()}\"`;
-        }
-
-        // 따옴표가 없는 경우도 대응
-        match = candidate.match(/\bSeason\s+\d+\s*[-–—:]\s*([^|\n\r]+)/i);
-        if (match) {
-          const name = match[1].trim().replace(/[.!,:;]+$/, '');
-          if (name && name.length < 100) return `Season ${seasonNumber} - \"${name}\"`;
-        }
+      if (doc.title) {
+        candidates.push(doc.title);
       }
 
-      return '';
+      doc
+        .querySelectorAll(
+          "h1, h2, h3, h4, .mw-parser-output p, .mw-parser-output div"
+        )
+        .forEach(el => {
+
+          const text =
+            (
+              el.innerText ||
+              el.textContent ||
+              ""
+            )
+              .replace(/\s+/g, " ")
+              .trim();
+
+          if (text) {
+            candidates.push(text);
+          }
+
+        });
+
+
+      candidates.push(
+        (
+          doc.body?.innerText ||
+          ""
+        )
+          .replace(/\s+/g, " ")
+      );
+
+
+      /*
+       * Season 1 - "KORD BREACH"
+       *
+       * Season 1 - KORD BREACH
+       */
+      for (const candidate of candidates) {
+
+        const seasonNumber =
+          candidate.match(
+            /\bSeason\s+(\d+)\b/i
+          )?.[1];
+
+        if (!seasonNumber) continue;
+
+
+        let match =
+          candidate.match(
+            /\bSeason\s+\d+\s*[-–—:]\s*["“”']([^"“”']+)["“”']/i
+          );
+
+        if (match) {
+
+          return `Season ${seasonNumber} - "${match[1].trim()}"`;
+
+        }
+
+
+        match =
+          candidate.match(
+            /\bSeason\s+\d+\s*[-–—:]\s*([^|\n\r]+)/i
+          );
+
+        if (match) {
+
+          const name =
+            match[1]
+              .trim()
+              .replace(/[.!,:;]+$/, "");
+
+          if (
+            name &&
+            name.length < 100
+          ) {
+
+            return `Season ${seasonNumber} - "${name}"`;
+
+          }
+
+        }
+
+      }
+
+      return "";
+
     }
 
-    function setSeasonName(seasonName) {
-      const seasonEl = document.getElementById('seasonName');
-      if (seasonEl) seasonEl.textContent = seasonName ? `(${seasonName})` : '';
+
+    function setSeasonName(
+      seasonName
+    ) {
+
+      const seasonEl =
+        document.getElementById(
+          "seasonName"
+        );
+
+      if (!seasonEl) return;
+
+      seasonEl.textContent =
+        seasonName
+          ? `(${seasonName})`
+          : "";
+
     }
 
-    // 팬덤 위키 데이터 파싱
-    async function fetchFandomBattlePass() {
-      const targetPage = "BattlePass";
 
-      // Fandom 페이지 HTML 자체를 가져오는 방식은 CORS 프록시 상태나
-      // 위키의 HTML 구조 변경에 따라 갑자기 실패할 수 있다.
-      // MediaWiki Action API를 우선 사용하고, 실패하면 프록시 HTML을 시도한다.
-      const apiUrls = [
-        `https://escapefromtarkov.fandom.com/api.php?action=parse&page=${encodeURIComponent(targetPage)}&prop=text&format=json&origin=*`,
-        `https://escapefromtarkov.fandom.com/api.php?action=parse&page=${encodeURIComponent(targetPage)}&prop=text&format=json&origin=https://escapefromtarkov.fandom.com`
+    /* =========================================================
+       SEASON END DATE PARSER
+    ========================================================== */
+
+    /*
+     * 다음과 같은 문장을 찾는다.
+     *
+     * The BattlePass for Season 1 started on August 3, 2026
+     * and ends on December 7, 2026.
+     *
+     * 시즌 종료 시간이 별도로 제공되지 않기 때문에
+     * 해당 날짜의 23:59:59 (UTC+3)를 종료 시각으로 사용한다.
+     */
+
+    function extractSeasonEndDate(doc) {
+
+      const elements = [
+        ...doc.querySelectorAll("p")
       ];
+
+      /*
+       * 혹시 p 구조가 바뀌더라도 전체 텍스트에서
+       * 같은 문장을 찾을 수 있도록 fallback을 둔다.
+       */
+      const candidates = [];
+
+      elements.forEach(el => {
+
+        const text =
+          (
+            el.innerText ||
+            el.textContent ||
+            ""
+          )
+            .replace(/\s+/g, " ")
+            .trim();
+
+        if (text) {
+          candidates.push(text);
+        }
+
+      });
+
+
+      if (doc.body) {
+
+        candidates.push(
+          (
+            doc.body.innerText ||
+            doc.body.textContent ||
+            ""
+          )
+            .replace(/\s+/g, " ")
+        );
+
+      }
+
+
+      /*
+       * Month names
+       */
+      const monthMap = {
+
+        january: 0,
+        february: 1,
+        march: 2,
+        april: 3,
+        may: 4,
+        june: 5,
+        july: 6,
+        august: 7,
+        september: 8,
+        october: 9,
+        november: 10,
+        december: 11
+
+      };
+
+
+      for (const text of candidates) {
+
+        /*
+         * ends on December 7, 2026
+         *
+         * ends on December 7 2026
+         */
+        const match =
+          text.match(
+            /\bends\s+on\s+([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})\b/i
+          );
+
+        if (!match) continue;
+
+        const monthName =
+          match[1].toLowerCase();
+
+        const day =
+          parseInt(match[2], 10);
+
+        const year =
+          parseInt(match[3], 10);
+
+        const month =
+          monthMap[monthName];
+
+        if (
+          month === undefined ||
+          !day ||
+          !year
+        ) {
+          continue;
+        }
+
+
+        /*
+         * UTC+3
+         *
+         * Date.UTC()는 UTC 기준이므로
+         * UTC+3의 23:59:59를 만들기 위해
+         * 3시간을 빼준다.
+         */
+        const utcTimestamp =
+          Date.UTC(
+            year,
+            month,
+            day,
+            20,
+            59,
+            59,
+            999
+          );
+
+        return utcTimestamp;
+
+      }
+
+      return null;
+
+    }
+
+
+    /* =========================================================
+       SET SEASON END
+    ========================================================== */
+
+    function setSeasonEndTimestamp(
+      timestamp
+    ) {
+
+      if (
+        !timestamp ||
+        !Number.isFinite(timestamp)
+      ) {
+
+        seasonEndTimestamp = null;
+
+        updateSeasonCountdown();
+
+        return;
+
+      }
+
+      seasonEndTimestamp = timestamp;
+
+      /*
+       * 즉시 표시
+       */
+      updateSeasonCountdown();
+
+    }
+
+
+    /* =========================================================
+       UTC+3 CURRENT TIME
+    ========================================================== */
+
+    /*
+     * 현재 시간이 UTC+3인지 확인하는 것이 아니라
+     * 현재 시각을 UTC timestamp로 가져온 뒤
+     * 종료 timestamp와 직접 비교한다.
+     *
+     * 따라서 사용자의 컴퓨터가 한국 시간(UTC+9)이든
+     * 다른 시간대이든 상관없이 항상 UTC+3 기준으로
+     * 동일한 시즌 종료 시각을 사용한다.
+     */
+    function getCurrentUtc3Timestamp() {
+
+      return Date.now();
+
+    }
+
+
+    /* =========================================================
+       COUNTDOWN
+    ========================================================== */
+
+    function updateSeasonCountdown() {
+
+      const countdownEl =
+        document.getElementById(
+          "seasonCountdown"
+        );
+
+      if (!countdownEl) return;
+
+
+      if (!seasonEndTimestamp) {
+
+        countdownEl.textContent =
+          "00 : 00 : 00 : 00";
+
+        return;
+
+      }
+
+
+      const now =
+        getCurrentUtc3Timestamp();
+
+      let diff =
+        seasonEndTimestamp - now;
+
+
+      /*
+       * 시즌 종료
+       */
+      if (diff <= 0) {
+
+        countdownEl.textContent =
+          "00 : 00 : 00 : 00";
+
+        return;
+
+      }
+
+
+      /*
+       * milliseconds
+       */
+      const totalSeconds =
+        Math.floor(
+          diff / 1000
+        );
+
+
+      const days =
+        Math.floor(
+          totalSeconds / 86400
+        );
+
+      const hours =
+        Math.floor(
+          (totalSeconds % 86400) / 3600
+        );
+
+      const minutes =
+        Math.floor(
+          (totalSeconds % 3600) / 60
+        );
+
+      const seconds =
+        totalSeconds % 60;
+
+
+      /*
+       * 숫자만 표시
+       *
+       * 예:
+       * 68 : 04 : 32 : 15
+       */
+      countdownEl.textContent =
+
+        String(days).padStart(2, "0") +
+        " : " +
+
+        String(hours).padStart(2, "0") +
+        " : " +
+
+        String(minutes).padStart(2, "0") +
+        " : " +
+
+        String(seconds).padStart(2, "0");
+
+    }
+
+
+    function startSeasonCountdown() {
+
+      if (countdownInterval) {
+
+        clearInterval(
+          countdownInterval
+        );
+
+      }
+
+      updateSeasonCountdown();
+
+      countdownInterval =
+        setInterval(
+          updateSeasonCountdown,
+          1000
+        );
+
+    }
+
+
+    /* =========================================================
+       FANDOM DATA FETCH
+    ========================================================== */
+
+    async function fetchFandomBattlePass() {
+
+      const targetPage =
+        "BattlePass";
+
+
+      const apiUrls = [
+
+        `https://escapefromtarkov.fandom.com/api.php?action=parse&page=${encodeURIComponent(targetPage)}&prop=text&format=json&origin=*`,
+
+        `https://escapefromtarkov.fandom.com/api.php?action=parse&page=${encodeURIComponent(targetPage)}&prop=text&format=json&origin=https://escapefromtarkov.fandom.com`
+
+      ];
+
 
       const proxyUrls = [
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://escapefromtarkov.fandom.com/wiki/${targetPage}`)}`,
-        `https://corsproxy.io/?${encodeURIComponent(`https://escapefromtarkov.fandom.com/wiki/${targetPage}`)}`
+
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(
+          `https://escapefromtarkov.fandom.com/wiki/${targetPage}`
+        )}`,
+
+        `https://corsproxy.io/?${encodeURIComponent(
+          `https://escapefromtarkov.fandom.com/wiki/${targetPage}`
+        )}`
+
       ];
 
+
       try {
+
         let htmlText = "";
 
-        // 1) Fandom MediaWiki API
+
+        /* =====================================================
+           1. FANDOM API
+        ====================================================== */
+
         for (const url of apiUrls) {
+
           try {
-            const res = await fetch(url, { cache: "no-store" });
-            if (!res.ok) continue;
 
-            const data = await res.json();
-            const apiHtml = data?.parse?.text?.["*"];
+            const res =
+              await fetch(
+                url,
+                {
+                  cache: "no-store"
+                }
+              );
+
+            if (!res.ok) {
+              continue;
+            }
+
+
+            const data =
+              await res.json();
+
+            const apiHtml =
+              data?.parse?.text?.["*"];
+
+
             if (apiHtml) {
-              htmlText = apiHtml;
+
+              htmlText =
+                apiHtml;
+
               break;
+
             }
+
           } catch (e) {
-            console.warn("Fandom API attempt failed:", e);
+
+            console.warn(
+              "Fandom API attempt failed:",
+              e
+            );
+
           }
+
         }
 
-        // 2) API가 막힌 경우 CORS 프록시 fallback
+
+        /* =====================================================
+           2. CORS PROXY FALLBACK
+        ====================================================== */
+
         if (!htmlText) {
+
           for (const url of proxyUrls) {
-            try {
-              const res = await fetch(url, { cache: "no-store" });
-              if (!res.ok) continue;
 
-              htmlText = await res.text();
-              if (htmlText && htmlText.includes("<table")) break;
+            try {
+
+              const res =
+                await fetch(
+                  url,
+                  {
+                    cache: "no-store"
+                  }
+                );
+
+              if (!res.ok) {
+                continue;
+              }
+
+
+              htmlText =
+                await res.text();
+
+
+              if (
+                htmlText &&
+                htmlText.includes("<table")
+              ) {
+
+                break;
+
+              }
+
             } catch (e) {
-              console.warn("Fandom proxy attempt failed:", e);
+
+              console.warn(
+                "Fandom proxy attempt failed:",
+                e
+              );
+
             }
+
           }
+
         }
+
 
         if (!htmlText) {
-          console.warn("Fandom BattlePass 데이터를 가져오지 못했습니다. 기본 데이터를 유지합니다.");
+
+          console.warn(
+            "Fandom BattlePass 데이터를 가져오지 못했습니다. 기본 데이터를 유지합니다."
+          );
+
           return;
+
         }
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlText, "text/html");
 
-        // 시즌명도 같은 파싱 결과에서 추출하여 제목에 표시
-        const seasonName = extractSeasonName(doc, htmlText);
-        if (seasonName) setSeasonName(seasonName);
+        /* =====================================================
+           PARSE HTML
+        ====================================================== */
 
-        // API 응답의 <table> 또는 일반 페이지의 wikitable 모두 대응
-        const tables = [...doc.querySelectorAll("table.wikitable, table")];
+        const parser =
+          new DOMParser();
+
+        const doc =
+          parser.parseFromString(
+            htmlText,
+            "text/html"
+          );
+
+
+        /* =====================================================
+           SEASON NAME
+        ====================================================== */
+
+        const seasonName =
+          extractSeasonName(
+            doc,
+            htmlText
+          );
+
+        if (seasonName) {
+
+          setSeasonName(
+            seasonName
+          );
+
+        }
+
+
+        /* =====================================================
+           SEASON END DATE
+        ====================================================== */
+
+        const seasonEnd =
+          extractSeasonEndDate(
+            doc
+          );
+
+        if (seasonEnd) {
+
+          setSeasonEndTimestamp(
+            seasonEnd
+          );
+
+          console.info(
+            "시즌 종료 시간:",
+            new Date(seasonEnd).toISOString()
+          );
+
+        } else {
+
+          console.warn(
+            "시즌 종료 날짜를 찾지 못했습니다."
+          );
+
+        }
+
+
+        /* =====================================================
+           FIND TABLE
+        ====================================================== */
+
+        const tables =
+          [
+            ...doc.querySelectorAll(
+              "table.wikitable, table"
+            )
+          ];
+
+
         if (tables.length === 0) {
-          console.warn("BattlePass 테이블을 찾지 못했습니다.");
+
+          console.warn(
+            "BattlePass 테이블을 찾지 못했습니다."
+          );
+
           return;
+
         }
 
-        // Level / Icon / Name / Type / Price(BP) 열을 가진 실제 BattlePass 표를 찾는다.
-        const targetTable = tables.find(table => {
-          const text = (table.innerText || table.textContent || "").replace(/\s+/g, " ").toLowerCase();
-          return text.includes("level") &&
-                 text.includes("price") &&
-                 (text.includes("battle points") || text.includes("price (bp)"));
-        }) || tables[0];
 
-        const rows = [...targetTable.querySelectorAll("tr")];
+        const targetTable =
+          tables.find(table => {
+
+            const text =
+              (
+                table.innerText ||
+                table.textContent ||
+                ""
+              )
+                .replace(/\s+/g, " ")
+                .toLowerCase();
+
+            return (
+
+              text.includes("level") &&
+
+              text.includes("price") &&
+
+              (
+                text.includes("battle points") ||
+                text.includes("price (bp)")
+              )
+
+            );
+
+          }) || tables[0];
+
+
+        const rows =
+          [
+            ...targetTable.querySelectorAll("tr")
+          ];
+
+
         const parsedPages = [];
+
         let currentPage = null;
+
         let pageCount = 0;
+
         let rewardIndex = 0;
 
-        rows.forEach((tr) => {
-          const cells = [...tr.querySelectorAll(":scope > th, :scope > td")];
-          if (cells.length < 3) return;
 
-          const cellText = cells.map(c => (c.innerText || c.textContent || "").replace(/\s+/g, " ").trim());
-          const rowText = cellText.join(" ");
+        /* =====================================================
+           PARSE TABLE ROWS
+        ====================================================== */
 
-          // 헤더 행
-          if (/^level$/i.test(cellText[0]) ||
-              cellText.some(v => /^price(?:\s*\(bp\))?$/i.test(v))) {
+        rows.forEach(tr => {
+
+          const cells =
+            [
+              ...tr.querySelectorAll(
+                ":scope > th, :scope > td"
+              )
+            ];
+
+
+          if (cells.length < 3) {
             return;
           }
 
-          // 첫 번째 열에 "Page N"이 포함된 행이 새 페이지의 시작이다.
-          const pageMatch = rowText.match(/\bPage\s+(\d+)\b/i);
+
+          const cellText =
+            cells.map(c =>
+              (
+                c.innerText ||
+                c.textContent ||
+                ""
+              )
+                .replace(/\s+/g, " ")
+                .trim()
+            );
+
+
+          const rowText =
+            cellText.join(" ");
+
+
+          /* ===================================================
+             HEADER
+          ================================================== */
+
+          if (
+
+            /^level$/i.test(
+              cellText[0]
+            ) ||
+
+            cellText.some(
+              v =>
+                /^price(?:\s*\(bp\))?$/i.test(v)
+            )
+
+          ) {
+
+            return;
+
+          }
+
+
+          /* ===================================================
+             PAGE
+          ================================================== */
+
+          const pageMatch =
+            rowText.match(
+              /\bPage\s+(\d+)\b/i
+            );
+
+
           if (pageMatch) {
-            pageCount = Number(pageMatch[1]) || (pageCount + 1);
+
+            pageCount =
+              Number(pageMatch[1]) ||
+              (pageCount + 1);
+
 
             currentPage = {
+
               page: pageCount,
+
               req: "",
+
               rewards: []
+
             };
-            parsedPages.push(currentPage);
+
+
+            parsedPages.push(
+              currentPage
+            );
+
           }
 
-          // Page 표시가 첫 보상보다 먼저 나오지 않는 비정상 구조도 처리
+
+          /*
+           * Page 표시가 첫 보상보다 먼저 나오지 않는
+           * 비정상적인 구조도 처리
+           */
+
           if (!currentPage) {
+
             pageCount++;
-            currentPage = { page: pageCount, req: "", rewards: [] };
-            parsedPages.push(currentPage);
+
+            currentPage = {
+
+              page: pageCount,
+
+              req: "",
+
+              rewards: []
+
+            };
+
+            parsedPages.push(
+              currentPage
+            );
+
           }
 
-          // 현재 BattlePass 표는 [Level, Icon, Name, Type, Price, ...] 구조다.
-          // rowspan 때문에 Icon/Name 셀이 비어 있는 경우에도 실제 텍스트가 있는 셀을 찾아낸다.
-          const nameCell = cells[2] || cells.find((c, i) => i > 1 && (c.innerText || "").trim());
-          const rewardName = (nameCell?.innerText || nameCell?.textContent || "").replace(/\s+/g, " ").trim();
 
-          if (!rewardName || /^(name|type)$/i.test(rewardName)) return;
+          /* ===================================================
+             REWARD NAME
+          ================================================== */
+
+          const nameCell =
+            cells[2] ||
+            cells.find(
+              (c, i) =>
+                i > 1 &&
+                (
+                  c.innerText ||
+                  ""
+                ).trim()
+            );
+
+
+          const rewardName =
+            (
+              nameCell?.innerText ||
+              nameCell?.textContent ||
+              ""
+            )
+              .replace(/\s+/g, " ")
+              .trim();
+
+
+          if (
+            !rewardName ||
+            /^(name|type)$/i.test(
+              rewardName
+            )
+          ) {
+
+            return;
+
+          }
+
+
+          /* ===================================================
+             ICON
+          ================================================== */
 
           const imgEl =
+
             cells[1]?.querySelector("img") ||
-            cells.find(c => c.querySelector("img"))?.querySelector("img");
 
-          const iconSrc = imgEl
-            ? (imgEl.getAttribute("data-src") ||
-               imgEl.getAttribute("data-lazy-src") ||
-               imgEl.getAttribute("src") || "")
-            : "";
+            cells
+              .find(
+                c => c.querySelector("img")
+              )
+              ?.querySelector("img");
 
-          // 가격 열은 헤더명을 기준으로 찾고, 실패하면 숫자 셀 중 마지막 값을 사용한다.
+
+          const iconSrc =
+            imgEl
+              ? (
+                  imgEl.getAttribute("data-src") ||
+                  imgEl.getAttribute("data-lazy-src") ||
+                  imgEl.getAttribute("src") ||
+                  ""
+                )
+              : "";
+
+
+          /* ===================================================
+             PRICE
+          ================================================== */
+
           let priceIndex = -1;
-          const headerRow = rows.find(r =>
-            [...r.querySelectorAll(":scope > th, :scope > td")]
-              .some(c => /^price(?:\s*\(bp\))?$/i.test((c.innerText || c.textContent || "").trim()))
-          );
+
+
+          const headerRow =
+            rows.find(r =>
+
+              [
+                ...r.querySelectorAll(
+                  ":scope > th, :scope > td"
+                )
+              ].some(c =>
+
+                /^price(?:\s*\(bp\))?$/i.test(
+                  (
+                    c.innerText ||
+                    c.textContent ||
+                    ""
+                  ).trim()
+                )
+
+              )
+
+            );
+
 
           if (headerRow) {
-            const headers = [...headerRow.querySelectorAll(":scope > th, :scope > td")]
-              .map(c => (c.innerText || c.textContent || "").replace(/\s+/g, " ").trim().toLowerCase());
-            priceIndex = headers.findIndex(v => v === "price (bp)" || v === "price");
+
+            const headers =
+              [
+                ...headerRow.querySelectorAll(
+                  ":scope > th, :scope > td"
+                )
+              ]
+                .map(c =>
+
+                  (
+                    c.innerText ||
+                    c.textContent ||
+                    ""
+                  )
+                    .replace(/\s+/g, " ")
+                    .trim()
+                    .toLowerCase()
+
+                );
+
+
+            priceIndex =
+              headers.findIndex(
+                v =>
+                  v === "price (bp)" ||
+                  v === "price"
+              );
+
           }
 
-          let priceText = priceIndex >= 0
-            ? cellText[priceIndex]
-            : cellText.slice(3).reverse().find(v => /^\d+$/.test(v)) || "1";
 
-          // "5 BP" 같은 표기도 대응
-          const priceMatch = String(priceText).match(/\d+/);
-          const price = priceMatch ? Math.max(1, parseInt(priceMatch[0], 10)) : 1;
+          let priceText =
+
+            priceIndex >= 0
+
+              ? cellText[priceIndex]
+
+              : cellText
+                  .slice(3)
+                  .reverse()
+                  .find(
+                    v =>
+                      /^\d+$/.test(v)
+                  ) || "1";
+
+
+          const priceMatch =
+            String(priceText)
+              .match(/\d+/);
+
+
+          const price =
+            priceMatch
+              ? Math.max(
+                  1,
+                  parseInt(
+                    priceMatch[0],
+                    10
+                  )
+                )
+              : 1;
+
 
           rewardIndex++;
+
+
           currentPage.rewards.push({
-            id: `p${currentPage.page}_${rewardIndex}`,
-            name: rewardName,
+
+            id:
+              `p${currentPage.page}_${rewardIndex}`,
+
+            name:
+              rewardName,
+
             price,
-            defaultCosts: { "FD": price },
-            icon: iconSrc
+
+            defaultCosts: {
+              "FD": price
+            },
+
+            icon:
+              iconSrc
+
           });
+
         });
 
-        // 보상이 없는 페이지 제거
-        const validPages = parsedPages.filter(p => p.rewards.length > 0);
+
+        /* =====================================================
+           REMOVE EMPTY PAGES
+        ====================================================== */
+
+        const validPages =
+          parsedPages.filter(
+            p =>
+              p.rewards.length > 0
+          );
+
 
         if (validPages.length > 0) {
-          roadmapPages = validPages;
-          console.info(`BattlePass 파싱 완료: ${validPages.length}개 페이지, ${rewardIndex}개 보상`);
+
+          roadmapPages =
+            validPages;
+
+
+          console.info(
+            `BattlePass 파싱 완료: ${validPages.length}개 페이지, ${rewardIndex}개 보상`
+          );
+
         } else {
-          console.warn("BattlePass 보상 데이터를 찾지 못했습니다. 기본 데이터를 유지합니다.");
+
+          console.warn(
+            "BattlePass 보상 데이터를 찾지 못했습니다. 기본 데이터를 유지합니다."
+          );
+
         }
+
       } catch (err) {
-        console.warn("Fandom Wiki fetch/parse failed, fallback to default.", err);
+
+        console.warn(
+          "Fandom Wiki fetch/parse failed, fallback to default.",
+          err
+        );
+
       }
+
     }
 
-    // 3. 로드맵 UI 렌더링 (2열 배치 및 클릭으로 수령 처리)
-    function renderRoadmap() {
-      const container = document.getElementById("roadmapContainer");
-      container.innerHTML = "";
 
-      roadmapPages.forEach(p => {
-        const col = document.createElement("div");
-        col.className = "roadmap-column";
+    /* =========================================================
+       PAGE CLAIM STATE
+    ========================================================== */
 
-        const header = document.createElement("div");
-        header.className = "column-header";
-        header.innerHTML = `<span>Page ${p.page}</span><span style="font-size:0.75rem; color:var(--text-dim);">${p.req}</span>`;
+    /*
+     * 해당 페이지의 모든 보상이 획득되어 있는지 확인
+     */
+    function isPageFullyClaimed(page) {
 
-        const body = document.createElement("div");
-        body.className = "column-body";
+      if (
+        !page ||
+        !page.rewards ||
+        page.rewards.length === 0
+      ) {
 
-        p.rewards.forEach(reward => {
-          const card = document.createElement("div");
-          const isClaimed = !!claimedRewards[reward.id];
-          card.className = `reward-card ${isClaimed ? 'claimed' : ''}`;
+        return false;
 
-          const currentCosts = userCosts[reward.id] || reward.defaultCosts;
-
-          let costTags = "";
-          Object.keys(currentCosts).forEach(code => {
-            const amt = currentCosts[code];
-            if (amt > 0) {
-              costTags += `<span class="cost-tag"><img src="${DOCS_DATA[code].file}" style="width:12px;height:12px" onerror="this.style.display='none'"> ${amt} ${code}</span>`;
-            }
-          });
-
-          card.innerHTML = `
-            <div class="reward-title-row">
-              <div class="reward-title" title="${reward.name}">${reward.name}</div>
-              <span class="edit-btn" onclick="event.stopPropagation(); openEditModal('${reward.id}')">✏️</span>
-            </div>
-            <div class="reward-img-container">
-              <img src="${reward.icon}" alt="${reward.name}" onerror="this.src='https://via.placeholder.com/80?text=Reward'">
-            </div>
-            <div class="reward-costs">${costTags}</div>
-          `;
-
-          // 보상 클릭 토글 (초록 불투명 토글 및 차감 계산 연계)
-          card.addEventListener("click", () => {
-            if (claimedRewards[reward.id]) {
-              delete claimedRewards[reward.id];
-            } else {
-              claimedRewards[reward.id] = true;
-            }
-            localStorage.setItem("eft_claimed_rewards", JSON.stringify(claimedRewards));
-            renderRoadmap();
-            calculateRequirements();
-          });
-
-          body.appendChild(card);
-        });
-
-        col.appendChild(header);
-        col.appendChild(body);
-        container.appendChild(col);
-      });
-    }
-
-    // 모달 관리
-    function openEditModal(rewardId) {
-      let reward = null;
-      for (const p of roadmapPages) {
-        const found = p.rewards.find(r => r.id === rewardId);
-        if (found) { reward = found; break; }
       }
-      if (!reward) return;
 
-      currentEditReward = reward;
-      document.getElementById("modalTitle").innerText = `Edit Costs: ${reward.name}`;
-      document.getElementById("maxPriceVal").innerText = reward.price;
 
-      const grid = document.getElementById("modalGrid");
-      grid.innerHTML = "";
+      return page.rewards.every(
+        reward =>
+          !!claimedRewards[reward.id]
+      );
 
-      const activeCosts = userCosts[reward.id] || reward.defaultCosts;
-
-      Object.keys(DOCS_DATA).forEach(code => {
-        const val = activeCosts[code] || 0;
-        const group = document.createElement("div");
-        group.className = "modal-input-group";
-        group.innerHTML = `
-          <label><img src="${DOCS_DATA[code].file}" style="width:14px;height:14px;" onerror="this.style.display='none'"> ${DOCS_DATA[code].name}</label>
-          <input type="number" min="0" value="${val}" data-modal-code="${code}">
-        `;
-        grid.appendChild(group);
-      });
-
-      document.getElementById("editModal").style.display = "flex";
     }
 
-    function closeModal() {
-      document.getElementById("editModal").style.display = "none";
-      currentEditReward = null;
-    }
 
-    document.getElementById("modalSaveBtn").addEventListener("click", () => {
-      if (!currentEditReward) return;
+    /*
+     * 페이지 전체 획득/미획득 토글
+     *
+     * 현재 미획득 보상이 하나라도 있다면
+     * → 모든 보상을 획득 처리
+     *
+     * 모든 보상이 이미 획득 상태라면
+     * → 모든 보상을 미획득 처리
+     */
+    function togglePageClaim(
+      page
+    ) {
 
-      const inputs = document.querySelectorAll("[data-modal-code]");
-      let sum = 0;
-      const newCosts = {};
-
-      inputs.forEach(input => {
-        const code = input.getAttribute("data-modal-code");
-        const val = parseInt(input.value) || 0;
-        if (val > 0) newCosts[code] = val;
-        sum += val;
-      });
-
-      if (sum > currentEditReward.price) {
-        alert(`입력하신 재화의 총합(${sum})이 해당 보상의 필요 총량(${currentEditReward.price})을 초과할 수 없습니다.`);
+      if (!page || !page.rewards) {
         return;
       }
 
-      userCosts[currentEditReward.id] = newCosts;
-      localStorage.setItem("eft_user_costs", JSON.stringify(userCosts));
 
-      closeModal();
-      renderRoadmap();
-      calculateRequirements();
-    });
+      const fullyClaimed =
+        isPageFullyClaimed(page);
 
-    document.getElementById("modalResetBtn").addEventListener("click", () => {
-      if (!currentEditReward) return;
-      delete userCosts[currentEditReward.id];
-      localStorage.setItem("eft_user_costs", JSON.stringify(userCosts));
-      closeModal();
-      renderRoadmap();
-      calculateRequirements();
-    });
 
-    document.getElementById("modalCancelBtn").addEventListener("click", closeModal);
+      if (fullyClaimed) {
 
-    // 4. 자동 소요 문서 및 최종 필요 수량 계산 (수령 상태 및 보유량에 따른 차감 적용)
-    function calculateRequirements() {
-      const totals = { "FD":0, "PD":0, "TD":0, "MD":0, "PMC":0, "BP":0, "UD":0, "Tech":0 };
+        /*
+         * 전체 미획득
+         */
+        page.rewards.forEach(
+          reward => {
 
-      // 미수령(Unclaimed) 보상에 대해서만 필요 재화 합산
-      roadmapPages.forEach(p => {
-        p.rewards.forEach(r => {
-          if (!claimedRewards[r.id]) {
-            const costs = userCosts[r.id] || r.defaultCosts;
-            Object.keys(costs).forEach(code => {
-              if (totals[code] !== undefined) {
-                totals[code] += costs[code];
-              }
-            });
+            delete claimedRewards[
+              reward.id
+            ];
+
           }
-        });
-      });
+        );
 
-      // 총 필요량에서 보유량(Inventory)만큼 차감 (최소 0)
-      Object.keys(totals).forEach(code => {
-        const currentInv = userInventory[code] || 0;
-        const remainReq = Math.max(0, totals[code] - currentInv);
+      } else {
 
-        const reqEl = document.getElementById(`req-${code}`);
-        if (reqEl) {
-          reqEl.innerText = `필요: ${remainReq}`;
-          // 필요량이 0이면 초록색, 남아있으면 빨간색
-          reqEl.style.color = remainReq === 0 ? "#4caf50" : "#ff5252";
-        }
-      });
+        /*
+         * 전체 획득
+         */
+        page.rewards.forEach(
+          reward => {
+
+            claimedRewards[
+              reward.id
+            ] = true;
+
+          }
+        );
+
+      }
+
+
+      localStorage.setItem(
+        "eft_claimed_rewards",
+        JSON.stringify(
+          claimedRewards
+        )
+      );
+
+
+      /*
+       * 다시 렌더링
+       */
+      renderRoadmap();
+
+      calculateRequirements();
+
     }
 
-    // 실행
+
+    /* =========================================================
+       FIRST UNCLAIMED PAGE
+    ========================================================== */
+
+    function findFirstUnclaimedPageIndex() {
+
+      for (
+        let i = 0;
+        i < roadmapPages.length;
+        i++
+      ) {
+
+        const page =
+          roadmapPages[i];
+
+        const hasUnclaimed =
+          page.rewards.some(
+            reward =>
+              !claimedRewards[
+                reward.id
+              ]
+          );
+
+        if (hasUnclaimed) {
+          return i;
+        }
+
+      }
+
+      /*
+       * 전부 획득했다면 마지막 페이지
+       */
+      return Math.max(
+        0,
+        roadmapPages.length - 1
+      );
+
+    }
+
+
+    /* =========================================================
+       SCROLL TO FIRST UNCLAIMED
+    ========================================================== */
+
+    function scrollToFirstUnclaimedPage(
+      behavior = "smooth"
+    ) {
+
+      const container =
+        document.getElementById(
+          "roadmapContainer"
+        );
+
+      if (!container) return;
+
+      if (
+        roadmapPages.length === 0
+      ) {
+        return;
+      }
+
+
+      const targetIndex =
+        findFirstUnclaimedPageIndex();
+
+
+      const targetColumn =
+        container.children[
+          targetIndex
+        ];
+
+
+      if (!targetColumn) return;
+
+
+      /*
+       * Page가 너무 화면 왼쪽에 붙지 않도록
+       * 현재 padding 15px을 고려한다.
+       */
+      const targetLeft =
+        targetColumn.offsetLeft -
+        15;
+
+
+      container.scrollTo({
+
+        left:
+          Math.max(
+            0,
+            targetLeft
+          ),
+
+        behavior
+
+      });
+
+    }
+
+
+    /* =========================================================
+       HORIZONTAL WHEEL
+    ========================================================== */
+
+    function setupHorizontalWheel() {
+
+      const container =
+        document.getElementById(
+          "roadmapContainer"
+        );
+
+      if (!container) return;
+
+
+      container.addEventListener(
+        "wheel",
+        event => {
+
+          /*
+           * Shift + Wheel은 브라우저 기본 동작을
+           * 존중해서 그대로 둔다.
+           */
+          if (event.shiftKey) {
+            return;
+          }
+
+
+          /*
+           * 세로 휠 입력을 가로 스크롤로 변환
+           */
+          if (
+            Math.abs(event.deltaY) >
+            Math.abs(event.deltaX)
+          ) {
+
+            event.preventDefault();
+
+            container.scrollLeft +=
+              event.deltaY;
+
+          } else if (
+            Math.abs(event.deltaX) > 0
+          ) {
+
+            event.preventDefault();
+
+            container.scrollLeft +=
+              event.deltaX;
+
+          }
+
+        },
+        {
+          passive: false
+        }
+      );
+
+    }
+
+
+    /* =========================================================
+       ROADMAP RENDER
+    ========================================================== */
+
+    function renderRoadmap() {
+
+      const container =
+        document.getElementById(
+          "roadmapContainer"
+        );
+
+
+      /*
+       * 렌더링 전에 현재 위치를 기억
+       */
+      const previousScrollLeft =
+        container.scrollLeft;
+
+
+      container.innerHTML = "";
+
+
+      roadmapPages.forEach(
+        (p, pageIndex) => {
+
+          const fullyClaimed =
+            isPageFullyClaimed(p);
+
+
+          /* ================================================
+             PAGE COLUMN
+          ================================================= */
+
+          const col =
+            document.createElement(
+              "div"
+            );
+
+
+          col.className =
+            "roadmap-column page-toggleable";
+
+
+          if (fullyClaimed) {
+
+            col.classList.add(
+              "page-claimed"
+            );
+
+          }
+
+
+          /*
+           * 페이지 전체를 클릭하면
+           * 페이지 전체 보상 상태를 토글
+           *
+           * 단, reward-card에서 클릭한 경우는
+           * reward 자체 클릭으로 처리하기 위해
+           * stopPropagation을 사용한다.
+           */
+          col.addEventListener(
+            "click",
+            () => {
+
+              togglePageClaim(p);
+
+            }
+          );
+
+
+          /* ================================================
+             PAGE HEADER
+          ================================================= */
+
+          const header =
+            document.createElement(
+              "div"
+            );
+
+
+          header.className =
+            "column-header";
+
+
+          header.innerHTML = `
+
+            <div class="page-title-area">
+
+              <span class="page-claim-indicator"></span>
+
+              <span>
+                Page ${p.page}
+              </span>
+
+            </div>
+
+            <span
+              style="
+                font-size:0.75rem;
+                color:var(--text-dim);
+              "
+            >
+              ${p.req || ""}
+            </span>
+
+            <span
+              class="page-status-text"
+            >
+              ${
+                fullyClaimed
+                  ? "CLAIMED"
+                  : "UNCLAIMED"
+              }
+            </span>
+
+          `;
+
+
+          /*
+           * header 자체에서 토글
+           *
+           * column에도 click이 있기 때문에
+           * 여기서 stopPropagation하지 않는다.
+           *
+           * header 클릭 → column click → toggle
+           */
+          col.appendChild(
+            header
+          );
+
+
+          /* ================================================
+             COLUMN BODY
+          ================================================= */
+
+          const body =
+            document.createElement(
+              "div"
+            );
+
+
+          body.className =
+            "column-body";
+
+
+          /*
+           * body 자체를 클릭하면 page가 토글되지 않도록
+           * 막는다.
+           *
+           * 개별 보상 클릭은 reward-card에서 처리한다.
+           */
+          body.addEventListener(
+            "click",
+            event => {
+
+              if (
+                event.target === body
+              ) {
+
+                event.stopPropagation();
+
+              }
+
+            }
+          );
+
+
+          /* ================================================
+             REWARDS
+          ================================================= */
+
+          p.rewards.forEach(
+            reward => {
+
+              const card =
+                document.createElement(
+                  "div"
+                );
+
+
+              const isClaimed =
+                !!claimedRewards[
+                  reward.id
+                ];
+
+
+              card.className =
+                `reward-card ${
+                  isClaimed
+                    ? "claimed"
+                    : ""
+                }`;
+
+
+              const currentCosts =
+                userCosts[
+                  reward.id
+                ] ||
+                reward.defaultCosts;
+
+
+              let costTags = "";
+
+
+              Object.keys(
+                currentCosts
+              ).forEach(
+                code => {
+
+                  const amt =
+                    currentCosts[code];
+
+
+                  if (amt > 0) {
+
+                    costTags += `
+
+                      <span class="cost-tag">
+
+                        <img
+                          src="${DOCS_DATA[code].file}"
+                          style="
+                            width:12px;
+                            height:12px
+                          "
+                          onerror="
+                            this.style.display='none'
+                          "
+                        >
+
+                        ${amt} ${code}
+
+                      </span>
+
+                    `;
+
+                  }
+
+                }
+              );
+
+
+              card.innerHTML = `
+
+                <div class="reward-title-row">
+
+                  <div
+                    class="reward-title"
+                    title="${reward.name}"
+                  >
+                    ${reward.name}
+                  </div>
+
+                  <span
+                    class="edit-btn"
+                    title="재화 수정"
+                  >
+                    ✏️
+                  </span>
+
+                </div>
+
+                <div class="reward-img-container">
+
+                  <img
+                    src="${reward.icon}"
+                    alt="${reward.name}"
+                    onerror="
+                      this.src='https://via.placeholder.com/80?text=Reward'
+                    "
+                  >
+
+                </div>
+
+                <div class="reward-costs">
+                  ${costTags}
+                </div>
+
+              `;
+
+
+              /* ==============================================
+                 EDIT BUTTON
+              ============================================== */
+
+              const editBtn =
+                card.querySelector(
+                  ".edit-btn"
+                );
+
+
+              editBtn.addEventListener(
+                "click",
+                event => {
+
+                  event.stopPropagation();
+
+                  openEditModal(
+                    reward.id
+                  );
+
+                }
+              );
+
+
+              /* ==============================================
+                 REWARD CLICK
+              ============================================== */
+
+              card.addEventListener(
+                "click",
+                event => {
+
+                  /*
+                   * 부모 Page 클릭 방지
+                   */
+                  event.stopPropagation();
+
+
+                  if (
+                    claimedRewards[
+                      reward.id
+                    ]
+                  ) {
+
+                    delete claimedRewards[
+                      reward.id
+                    ];
+
+                  } else {
+
+                    claimedRewards[
+                      reward.id
+                    ] = true;
+
+                  }
+
+
+                  localStorage.setItem(
+                    "eft_claimed_rewards",
+                    JSON.stringify(
+                      claimedRewards
+                    )
+                  );
+
+
+                  renderRoadmap();
+
+                  calculateRequirements();
+
+                }
+              );
+
+
+              body.appendChild(card);
+
+            }
+          );
+
+
+          col.appendChild(body);
+
+          container.appendChild(col);
+
+        }
+      );
+
+
+      /*
+       * 최초 렌더링은 미획득 보상 위치로 이동.
+       *
+       * 이미 화면 위치를 사용자가 보고 있던 상태에서는
+       * 불필요하게 화면을 움직이지 않는다.
+       *
+       * 처음 렌더링이거나 페이지 상태를 변경한 경우에는
+       * 미획득 위치로 이동한다.
+       */
+      requestAnimationFrame(
+        () => {
+
+          if (
+            previousScrollLeft === 0
+          ) {
+
+            scrollToFirstUnclaimedPage(
+              "auto"
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =========================================================
+       EDIT MODAL
+    ========================================================== */
+
+    function openEditModal(
+      rewardId
+    ) {
+
+      let reward = null;
+
+
+      for (
+        const p of roadmapPages
+      ) {
+
+        const found =
+          p.rewards.find(
+            r =>
+              r.id === rewardId
+          );
+
+
+        if (found) {
+
+          reward = found;
+
+          break;
+
+        }
+
+      }
+
+
+      if (!reward) return;
+
+
+      currentEditReward =
+        reward;
+
+
+      document.getElementById(
+        "modalTitle"
+      ).innerText =
+        `Edit Costs: ${reward.name}`;
+
+
+      document.getElementById(
+        "maxPriceVal"
+      ).innerText =
+        reward.price;
+
+
+      const grid =
+        document.getElementById(
+          "modalGrid"
+        );
+
+
+      grid.innerHTML = "";
+
+
+      const activeCosts =
+        userCosts[
+          reward.id
+        ] ||
+        reward.defaultCosts;
+
+
+      Object.keys(
+        DOCS_DATA
+      ).forEach(
+        code => {
+
+          const val =
+            activeCosts[code] ||
+            0;
+
+
+          const group =
+            document.createElement(
+              "div"
+            );
+
+
+          group.className =
+            "modal-input-group";
+
+
+          group.innerHTML = `
+
+            <label>
+
+              <img
+                src="${DOCS_DATA[code].file}"
+                style="
+                  width:14px;
+                  height:14px;
+                "
+                onerror="
+                  this.style.display='none'
+                "
+              >
+
+              ${DOCS_DATA[code].name}
+
+            </label>
+
+            <input
+              type="number"
+              min="0"
+              value="${val}"
+              data-modal-code="${code}"
+            >
+
+          `;
+
+
+          grid.appendChild(
+            group
+          );
+
+        }
+      );
+
+
+      document.getElementById(
+        "editModal"
+      ).style.display =
+        "flex";
+
+    }
+
+
+    function closeModal() {
+
+      document.getElementById(
+        "editModal"
+      ).style.display =
+        "none";
+
+
+      currentEditReward =
+        null;
+
+    }
+
+
+    /* =========================================================
+       MODAL SAVE
+    ========================================================== */
+
+    document.getElementById(
+      "modalSaveBtn"
+    ).addEventListener(
+      "click",
+      () => {
+
+        if (!currentEditReward) {
+          return;
+        }
+
+
+        const inputs =
+          document.querySelectorAll(
+            "[data-modal-code]"
+          );
+
+
+        let sum = 0;
+
+        const newCosts = {};
+
+
+        inputs.forEach(
+          input => {
+
+            const code =
+              input.getAttribute(
+                "data-modal-code"
+              );
+
+
+            const val =
+              parseInt(
+                input.value
+              ) || 0;
+
+
+            if (val > 0) {
+
+              newCosts[code] =
+                val;
+
+            }
+
+
+            sum += val;
+
+          }
+        );
+
+
+        if (
+          sum >
+          currentEditReward.price
+        ) {
+
+          alert(
+            `입력하신 재화의 총합(${sum})이 해당 보상의 필요 총량(${currentEditReward.price})을 초과할 수 없습니다.`
+          );
+
+          return;
+
+        }
+
+
+        userCosts[
+          currentEditReward.id
+        ] =
+          newCosts;
+
+
+        localStorage.setItem(
+          "eft_user_costs",
+          JSON.stringify(
+            userCosts
+          )
+        );
+
+
+        closeModal();
+
+        renderRoadmap();
+
+        calculateRequirements();
+
+      }
+    );
+
+
+    /* =========================================================
+       MODAL RESET
+    ========================================================== */
+
+    document.getElementById(
+      "modalResetBtn"
+    ).addEventListener(
+      "click",
+      () => {
+
+        if (!currentEditReward) {
+          return;
+        }
+
+
+        delete userCosts[
+          currentEditReward.id
+        ];
+
+
+        localStorage.setItem(
+          "eft_user_costs",
+          JSON.stringify(
+            userCosts
+          )
+        );
+
+
+        closeModal();
+
+        renderRoadmap();
+
+        calculateRequirements();
+
+      }
+    );
+
+
+    /* =========================================================
+       MODAL CANCEL
+    ========================================================== */
+
+    document.getElementById(
+      "modalCancelBtn"
+    ).addEventListener(
+      "click",
+      closeModal
+    );
+
+
+    /* =========================================================
+       CLICK OUTSIDE MODAL
+    ========================================================== */
+
+    document.getElementById(
+      "editModal"
+    ).addEventListener(
+      "click",
+      event => {
+
+        if (
+          event.target.id ===
+          "editModal"
+        ) {
+
+          closeModal();
+
+        }
+
+      }
+    );
+
+
+    /* =========================================================
+       REQUIREMENT CALCULATION
+    ========================================================== */
+
+    function calculateRequirements() {
+
+      const totals = {
+
+        "FD": 0,
+        "PD": 0,
+        "TD": 0,
+        "MD": 0,
+        "PMC": 0,
+        "BP": 0,
+        "UD": 0,
+        "Tech": 0
+
+      };
+
+
+      /*
+       * 미수령 보상만 계산
+       */
+      roadmapPages.forEach(
+        p => {
+
+          p.rewards.forEach(
+            r => {
+
+              if (
+                !claimedRewards[
+                  r.id
+                ]
+              ) {
+
+                const costs =
+                  userCosts[
+                    r.id
+                  ] ||
+                  r.defaultCosts;
+
+
+                Object.keys(
+                  costs
+                ).forEach(
+                  code => {
+
+                    if (
+                      totals[code] !==
+                      undefined
+                    ) {
+
+                      totals[code] +=
+                        costs[code];
+
+                    }
+
+                  }
+                );
+
+              }
+
+            }
+          );
+
+        }
+      );
+
+
+      /*
+       * 보유량 차감
+       */
+      Object.keys(
+        totals
+      ).forEach(
+        code => {
+
+          const currentInv =
+            userInventory[
+              code
+            ] || 0;
+
+
+          const remainReq =
+            Math.max(
+              0,
+              totals[code] -
+              currentInv
+            );
+
+
+          const reqEl =
+            document.getElementById(
+              `req-${code}`
+            );
+
+
+          if (reqEl) {
+
+            reqEl.innerText =
+              `필요: ${remainReq}`;
+
+
+            reqEl.style.color =
+              remainReq === 0
+                ? "#4caf50"
+                : "#ff5252";
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =========================================================
+       START
+    ========================================================== */
+
     init();
+
   </script>
+
 </body>
 </html>

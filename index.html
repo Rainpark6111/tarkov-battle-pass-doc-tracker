@@ -14,6 +14,8 @@
       --highlight-color: #ff9800;
       --text-color: #e0e0e0;
       --text-dim: #9e9e9e;
+      --claimed-bg: rgba(76, 175, 80, 0.25);
+      --claimed-border: #4caf50;
     }
 
     * {
@@ -63,34 +65,39 @@
       overflow: hidden;
     }
 
-    /* Left Sidebar: Map Selector (2번) */
+    /* Left Sidebar: Map Selector (스크롤 제거 및 한눈에 보기) */
     .sidebar {
       width: 280px;
       background-color: var(--panel-bg);
       border-right: 1px solid var(--border-color);
-      padding: 15px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      overflow-y: auto;
+      gap: 6px;
+      overflow: hidden; /* 스크롤 제거 */
       flex-shrink: 0;
     }
 
     .sidebar h2 {
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: var(--accent-color);
-      margin-bottom: 10px;
+      margin-bottom: 4px;
       border-bottom: 1px solid var(--border-color);
-      padding-bottom: 5px;
+      padding-bottom: 4px;
     }
 
     .map-card {
       background-color: var(--card-bg);
       border: 2px solid transparent;
-      border-radius: 6px;
-      padding: 10px;
+      border-radius: 5px;
+      padding: 6px 8px;
       cursor: pointer;
       transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex: 1; /* 높이 균등 분배 */
+      min-height: 0;
     }
 
     .map-card:hover {
@@ -100,18 +107,18 @@
 
     .map-card.active, .map-card.highlight {
       border-color: var(--highlight-color);
-      box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
+      box-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
       background-color: #3a3226;
     }
 
     .map-name {
       font-weight: bold;
-      font-size: 0.95rem;
-      margin-bottom: 5px;
+      font-size: 0.85rem;
+      margin-bottom: 2px;
     }
 
     .map-docs {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-dim);
       display: flex;
       flex-wrap: wrap;
@@ -120,8 +127,8 @@
 
     .doc-badge {
       background-color: rgba(255, 255, 255, 0.08);
-      padding: 2px 6px;
-      border-radius: 4px;
+      padding: 1px 5px;
+      border-radius: 3px;
     }
 
     /* Center Content */
@@ -132,14 +139,14 @@
       overflow: hidden;
     }
 
-    /* Central Roadmap Scroll (3번) */
+    /* Central Roadmap Scroll */
     .roadmap-scroll {
       flex: 1;
       overflow-x: auto;
       overflow-y: hidden;
-      padding: 20px;
+      padding: 15px;
       display: flex;
-      gap: 20px;
+      gap: 15px;
       background-color: #16181d;
     }
 
@@ -147,8 +154,8 @@
       background-color: var(--panel-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      width: 220px;
-      min-width: 220px;
+      width: 320px;
+      min-width: 320px;
       display: flex;
       flex-direction: column;
       height: 100%;
@@ -165,24 +172,41 @@
       color: var(--accent-color);
     }
 
+    /* 세로 스크롤 제거 및 2열 Grid 적용 */
     .column-body {
       padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      overflow-y: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* 2열 배치 */
+      gap: 10px;
+      overflow-y: hidden; /* 컬럼 내 세로 스크롤 제거 */
       flex: 1;
+      align-content: start;
     }
 
+    /* 보상 카드 (클릭 가능) */
     .reward-card {
       background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
+      border: 2px solid var(--border-color);
       border-radius: 6px;
-      padding: 10px;
+      padding: 8px;
       position: relative;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .reward-card:hover {
+      border-color: #555d6d;
+    }
+
+    /* 수령 완료 상태 (초록색 불투명 음영) */
+    .reward-card.claimed {
+      background-color: var(--claimed-bg);
+      border-color: var(--claimed-border);
+      box-shadow: inset 0 0 10px rgba(76, 175, 80, 0.3);
     }
 
     .reward-title-row {
@@ -193,18 +217,18 @@
 
     .reward-title {
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #fff;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 150px;
+      max-width: 100px;
     }
 
     .edit-btn {
       cursor: pointer;
       color: #ff5252;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       transition: transform 0.1s;
     }
 
@@ -214,7 +238,7 @@
 
     .reward-img-container {
       width: 100%;
-      height: 100px;
+      height: 70px;
       background-color: rgba(0,0,0,0.3);
       border-radius: 4px;
       display: flex;
@@ -232,21 +256,21 @@
     .reward-costs {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px;
+      gap: 3px;
     }
 
     .cost-tag {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       background-color: #121417;
       border: 1px solid var(--border-color);
-      padding: 2px 6px;
-      border-radius: 4px;
+      padding: 1px 4px;
+      border-radius: 3px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
 
-    /* Bottom Panel: Inventory & Requirements (4번) */
+    /* Bottom Panel: Inventory & Requirements */
     .bottom-panel {
       height: 180px;
       background-color: var(--panel-bg);
@@ -292,14 +316,14 @@
 
     .doc-icon-title {
       display: flex;
-      flex-direction: row; /* 좌(이미지) - 우(이름) 배치 */
+      flex-direction: row;
       align-items: center;
       gap: 10px;
       width: 100%;
     }
 
     .doc-icon-title img {
-      width: 70px;  /* 기존 28px -> 2.5배 확대한 70px */
+      width: 70px;
       height: 70px;
       object-fit: contain;
       flex-shrink: 0;
@@ -313,32 +337,52 @@
       word-break: keep-all;
     }
 
+    /* 필요량/보유량 UI 커스텀 (크기 확대 및 중앙 정렬) */
     .doc-counters {
       width: 100%;
       display: flex;
-      justify-content: space-between;
-      font-size: 0.75rem;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
       margin-top: 4px;
+      background: rgba(0,0,0,0.2);
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    .doc-counter-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .counter-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-weight: bold;
     }
 
     .doc-input {
-      width: 40px;
+      width: 48px;
+      height: 26px;
       background-color: #121417;
       border: 1px solid var(--border-color);
       color: #fff;
       text-align: center;
-      border-radius: 3px;
-      font-size: 0.75rem;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-weight: bold;
     }
 
     .doc-req {
+      font-size: 1rem;
       color: #ff5252;
       font-weight: bold;
       display: flex;
       align-items: center;
     }
 
-    /* Modal (3번 편집 모달) */
+    /* Modal */
     .modal-overlay {
       position: fixed;
       top:0; left:0; width:100%; height:100%;
@@ -430,7 +474,7 @@
   </header>
 
   <div class="main-container">
-    <!-- 2. 좌중단 : 맵 선택 -->
+    <!-- 2. 좌중단 : 맵 선택 (스크롤 제거) -->
     <div class="sidebar" id="mapList">
       <h2>맵 목록</h2>
       <!-- JS로 동적 생성 -->
@@ -438,7 +482,7 @@
 
     <!-- 중앙 영역 -->
     <div class="content-area">
-      <!-- 3. 중앙상단 : 배틀패스 보상 로드맵 스크롤 -->
+      <!-- 3. 중앙상단 : 배틀패스 보상 로드맵 (페이지별 2행 Grid) -->
       <div class="roadmap-scroll" id="roadmapContainer">
         <!-- JS로 동적 생성 -->
       </div>
@@ -484,7 +528,7 @@
       "Tech": { name: "장비 문서", file: "Tech.webp" }
     };
 
-    // 맵 정의 (맵 - 생성 문서 연계)
+    // 맵 정의
     const MAPS_DATA = [
       { name: "커스텀", docs: ["FD", "PD"] },
       { name: "타르코프 시내", docs: ["FD", "UD"] },
@@ -500,11 +544,12 @@
       { name: "실험실", docs: ["UD", "MD"] }
     ];
 
-    // 유저가 수동 수정한 재화 데이터 저장소 (로컬 스토리지 연동)
+    // 유저 로컬 스토리지 데이터
     let userCosts = JSON.parse(localStorage.getItem("eft_user_costs") || "{}");
     let userInventory = JSON.parse(localStorage.getItem("eft_user_inventory") || "{}");
+    let claimedRewards = JSON.parse(localStorage.getItem("eft_claimed_rewards") || "{}");
 
-    // 기본 로드맵 데이터 (파싱 실패시 대체용 백업 데이터)
+    // 기본 로드맵 데이터
     let roadmapPages = [
       {
         page: 1,
@@ -531,7 +576,7 @@
       calculateRequirements();
     }
 
-    // 2. 맵 목록 리더링
+    // 2. 맵 목록 렌더링
     function renderMapList() {
       const mapListEl = document.getElementById("mapList");
       mapListEl.innerHTML = "<h2>맵 목록</h2>";
@@ -552,31 +597,27 @@
       });
     }
 
-    // 맵 클릭 처리 (하이라이트 연계)
     function handleMapClick(map) {
       if (selectedMap === map.name) {
         selectedMap = null;
       } else {
         selectedMap = map.name;
       }
-      selectedDoc = null; // 맵 선택 시 기존 문서 선택 해제
+      selectedDoc = null;
       updateHighlights();
     }
 
-    // 문서 클릭 처리 (하이라이트 연계)
     function handleDocClick(docCode) {
       if (selectedDoc === docCode) {
         selectedDoc = null;
       } else {
         selectedDoc = docCode;
       }
-      selectedMap = null; // 문서 선택 시 기존 맵 선택 해제
+      selectedMap = null;
       updateHighlights();
     }
 
-    // 하이라이트 동기화 함수
     function updateHighlights() {
-      // 맵 카드 하이라이트
       MAPS_DATA.forEach(map => {
         const el = document.getElementById(`map-${map.name}`);
         if (!el) return;
@@ -589,7 +630,6 @@
         }
       });
 
-      // 문서 카드 하이라이트
       Object.keys(DOCS_DATA).forEach(code => {
         const el = document.getElementById(`doc-item-${code}`);
         if (!el) return;
@@ -606,7 +646,7 @@
       });
     }
 
-    // 4. 중앙 하단 보유 문서 및 필요 수량 UI
+    // 4. 보유 문서 및 필요 수량 UI 렌더링
     function renderDocsGrid() {
       const grid = document.getElementById("docsGrid");
       grid.innerHTML = "";
@@ -621,31 +661,32 @@
 
         item.innerHTML = `
           <div class="doc-icon-title">
-            <img src="${doc.file}" alt="${doc.name}" onerror="this.src='https://via.placeholder.com/28?text=${code}'">
+            <img src="${doc.file}" alt="${doc.name}" onerror="this.src='https://via.placeholder.com/70?text=${code}'">
             <div class="doc-name">${doc.name}</div>
           </div>
           <div class="doc-counters">
-            <input type="number" min="0" class="doc-input" value="${count}" data-code="${code}">
+            <div class="doc-counter-group">
+              <span class="counter-label">보유:</span>
+              <input type="number" min="0" class="doc-input" value="${count}" data-code="${code}">
+            </div>
             <div class="doc-req" id="req-${code}">필요: 0</div>
           </div>
         `;
 
-        // 보유 수량 변경 이벤트
         const input = item.querySelector(".doc-input");
         input.addEventListener("change", (e) => {
           userInventory[code] = parseInt(e.target.value) || 0;
           localStorage.setItem("eft_user_inventory", JSON.stringify(userInventory));
+          calculateRequirements(); // 보유량 변경 시 필요량 차감 재계산
         });
         input.addEventListener("click", (e) => e.stopPropagation());
 
-        // 카드 클릭 이벤트 (맵 하이라이트)
         item.addEventListener("click", () => handleDocClick(code));
-
         grid.appendChild(item);
       });
     }
 
-    // 팬덤 위키 동적 파싱 (3번)
+    // 팬덤 위키 데이터 파싱
     async function fetchFandomBattlePass() {
       try {
         const corsProxy = "https://api.allorigins.win/raw?url=";
@@ -661,29 +702,21 @@
         let currentPage = { page: 1, req: "", rewards: [] };
         let pageCount = 1;
 
-        // 테이블 수집
         const tables = doc.querySelectorAll("table.wikitable");
         if (tables.length === 0) return;
 
-        // 최신 테이블 파싱
         const targetTable = tables[0];
         const rows = targetTable.querySelectorAll("tbody tr");
 
         rows.forEach((tr, idx) => {
-          if (idx === 0) return; // 첫 번째 행(헤더) 제외
+          if (idx === 0) return;
 
-          // th와 td를 모두 가져옵니다.
           const cells = tr.querySelectorAll("th, td");
           if (cells.length < 3) return;
 
-          // 2번째 셀(cells[1])에서 이미지 파싱
           const imgEl = cells[1]?.querySelector("img");
           const iconSrc = imgEl ? (imgEl.getAttribute("data-src") || imgEl.src) : "";
-
-          // 3번째 셀(cells[2])에서 보상 이름 파싱
           const rewardName = cells[2]?.textContent?.trim() || `Reward ${idx}`;
-
-          // 마지막 셀에서 가격 파싱
           const priceText = cells[cells.length - 1]?.textContent?.trim() || "1";
           const price = parseInt(priceText, 10) || 1;
 
@@ -695,7 +728,6 @@
             icon: iconSrc
           });
 
-          // border-bottom 2px 속성 검사 (페이지 종료 구분)
           let isPageEnd = false;
           cells.forEach(cell => {
             if (cell.style.borderBottom && cell.style.borderBottom.includes("2px")) {
@@ -721,7 +753,8 @@
         console.warn("Fandom Wiki fetch failed, fallback to default.", err);
       }
     }
-    // 3. 로드맵 UI 렌더링
+
+    // 3. 로드맵 UI 렌더링 (2열 배치 및 클릭으로 수령 처리)
     function renderRoadmap() {
       const container = document.getElementById("roadmapContainer");
       container.innerHTML = "";
@@ -739,9 +772,9 @@
 
         p.rewards.forEach(reward => {
           const card = document.createElement("div");
-          card.className = "reward-card";
+          const isClaimed = !!claimedRewards[reward.id];
+          card.className = `reward-card ${isClaimed ? 'claimed' : ''}`;
 
-          // 저장된 커스텀 수량 확인
           const currentCosts = userCosts[reward.id] || reward.defaultCosts;
 
           let costTags = "";
@@ -755,13 +788,25 @@
           card.innerHTML = `
             <div class="reward-title-row">
               <div class="reward-title" title="${reward.name}">${reward.name}</div>
-              <span class="edit-btn" onclick="openEditModal('${reward.id}')">✏️</span>
+              <span class="edit-btn" onclick="event.stopPropagation(); openEditModal('${reward.id}')">✏️</span>
             </div>
             <div class="reward-img-container">
               <img src="${reward.icon}" alt="${reward.name}" onerror="this.src='https://via.placeholder.com/80?text=Reward'">
             </div>
             <div class="reward-costs">${costTags}</div>
           `;
+
+          // 보상 클릭 토글 (초록 불투명 토글 및 차감 계산 연계)
+          card.addEventListener("click", () => {
+            if (claimedRewards[reward.id]) {
+              delete claimedRewards[reward.id];
+            } else {
+              claimedRewards[reward.id] = true;
+            }
+            localStorage.setItem("eft_claimed_rewards", JSON.stringify(claimedRewards));
+            renderRoadmap();
+            calculateRequirements();
+          });
 
           body.appendChild(card);
         });
@@ -772,7 +817,7 @@
       });
     }
 
-    // 수량 편집 모달 제어
+    // 모달 관리
     function openEditModal(rewardId) {
       let reward = null;
       for (const p of roadmapPages) {
@@ -809,7 +854,6 @@
       currentEditReward = null;
     }
 
-    // 모달 저장 처리 (재화 합계 유효성 검사)
     document.getElementById("modalSaveBtn").addEventListener("click", () => {
       if (!currentEditReward) return;
 
@@ -848,25 +892,34 @@
 
     document.getElementById("modalCancelBtn").addEventListener("click", closeModal);
 
-    // 자동 소요 문서 합계 계산 (4번)
+    // 4. 자동 소요 문서 및 최종 필요 수량 계산 (수령 상태 및 보유량에 따른 차감 적용)
     function calculateRequirements() {
       const totals = { "FD":0, "PD":0, "TD":0, "MD":0, "PMC":0, "BP":0, "UD":0, "Tech":0 };
 
+      // 미수령(Unclaimed) 보상에 대해서만 필요 재화 합산
       roadmapPages.forEach(p => {
         p.rewards.forEach(r => {
-          const costs = userCosts[r.id] || r.defaultCosts;
-          Object.keys(costs).forEach(code => {
-            if (totals[code] !== undefined) {
-              totals[code] += costs[code];
-            }
-          });
+          if (!claimedRewards[r.id]) {
+            const costs = userCosts[r.id] || r.defaultCosts;
+            Object.keys(costs).forEach(code => {
+              if (totals[code] !== undefined) {
+                totals[code] += costs[code];
+              }
+            });
+          }
         });
       });
 
+      // 총 필요량에서 보유량(Inventory)만큼 차감 (최소 0)
       Object.keys(totals).forEach(code => {
+        const currentInv = userInventory[code] || 0;
+        const remainReq = Math.max(0, totals[code] - currentInv);
+
         const reqEl = document.getElementById(`req-${code}`);
         if (reqEl) {
-          reqEl.innerText = `필요: ${totals[code]}`;
+          reqEl.innerText = `필요: ${remainReq}`;
+          // 필요량이 0이면 초록색, 남아있으면 빨간색
+          reqEl.style.color = remainReq === 0 ? "#4caf50" : "#ff5252";
         }
       });
     }

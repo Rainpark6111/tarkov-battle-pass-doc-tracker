@@ -109,9 +109,35 @@
       letter-spacing: 0;
     }
 
+    /* ===== HEADER RIGHT (RESET BUTTON + COUNTDOWN) ===== */
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .reset-progress-btn {
+      background-color: transparent;
+      color: #ff8a80;
+      border: 1px solid rgba(255, 82, 82, 0.6);
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .reset-progress-btn:hover {
+      background-color: rgba(255, 82, 82, 0.15);
+      border-color: #ff5252;
+      color: #fff;
+    }
+
     /* ===== SEASON COUNTDOWN ===== */
     .season-countdown {
-      margin-left: auto;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
@@ -546,9 +572,13 @@
       <span id="seasonName" class="season-name"></span>
     </h1>
 
-    <div class="season-countdown">
-      <div class="season-countdown-title">SEASON TIME REMAINING</div>
-      <div id="seasonCountdown">00 : 00 : 00 : 00</div>
+    <div class="header-right">
+      <button class="reset-progress-btn" id="resetProgressBtn" title="클레임 상태와 문서 보유량을 초기화합니다">초기화</button>
+
+      <div class="season-countdown">
+        <div class="season-countdown-title">SEASON TIME REMAINING</div>
+        <div id="seasonCountdown">00 : 00 : 00 : 00</div>
+      </div>
     </div>
   </header>
 
@@ -663,9 +693,77 @@
     let seasonEndTimestamp = null;
     let countdownInterval = null;
 
+    // 위키에서 파싱한 현재 시즌 식별값 (파싱 실패 시 빈 문자열)
+    let currentSeasonKey = "";
+
+    const SEASON_KEY_STORAGE = "eft_season_key";
+
     const $ = id => document.getElementById(id);
     const cleanText = el => (el?.innerText || el?.textContent || "").replace(/\s+/g, " ").trim();
     const getCosts = reward => userCosts[reward.id] || reward.defaultCosts;
+
+    /* =========================================================
+       RESET (SEASON CHANGE / MANUAL)
+    ========================================================= */
+
+    /*
+     * 수동 초기화: 클레임 상태와 문서 보유량만 초기화한다.
+     * Edit Costs로 수정한 재화(userCosts)는 그대로 유지한다.
+     */
+    function resetClaimsAndInventory() {
+      claimedRewards = {};
+      userInventory = {};
+
+      saveStore("eft_claimed_rewards", claimedRewards);
+      saveStore("eft_user_inventory", userInventory);
+    }
+
+    /*
+     * 시즌 변경 시 초기화: 클레임, 보유량, 수정한 재화까지 모두 기본값으로 되돌린다.
+     */
+    function resetAllProgress() {
+      resetClaimsAndInventory();
+
+      userCosts = {};
+      saveStore("eft_user_costs", userCosts);
+    }
+
+    /*
+     * 저장된 시즌 식별값과 현재 파싱한 시즌이 다르면 전체 초기화한다.
+     * - 시즌을 파싱하지 못한 경우(currentSeasonKey 없음)에는 아무것도 하지 않는다.
+     * - 저장된 식별값이 없는 최초 실행에서는 기존 데이터를 유지하고 식별값만 저장한다.
+     * 초기화가 일어났으면 true를 반환한다.
+     */
+    function checkSeasonChange() {
+      if (!currentSeasonKey) return false;
+
+      const savedKey = localStorage.getItem(SEASON_KEY_STORAGE);
+      localStorage.setItem(SEASON_KEY_STORAGE, currentSeasonKey);
+
+      if (!savedKey || savedKey === currentSeasonKey) return false;
+
+      resetAllProgress();
+      console.info(`시즌 변경 감지: "${savedKey}" → "${currentSeasonKey}", 전체 진행도를 초기화했습니다.`);
+      return true;
+    }
+
+    function handleResetButtonClick() {
+      const ok = confirm("클레임된 보상과 문서 보유량을 초기화할까요?\n(Edit Costs로 수정한 재화는 유지됩니다)");
+      if (!ok) return;
+
+      resetClaimsAndInventory();
+
+      // 초기화 후에는 첫 페이지 기준으로 다시 그린다.
+      const container = $("roadmapContainer");
+      if (container) container.scrollLeft = 0;
+
+      renderDocsGrid();
+      updateHighlights();
+      renderRoadmap();
+      calculateRequirements();
+    }
+
+    $("resetProgressBtn").addEventListener("click", handleResetButtonClick);
 
     /* =========================================================
        INIT
@@ -676,6 +774,12 @@
       renderDocsGrid();
 
       await fetchFandomBattlePass();
+
+      // 시즌이 바뀌었다면 전체 초기화 후 보유량 UI를 다시 그린다.
+      if (checkSeasonChange()) {
+        renderDocsGrid();
+        updateHighlights();
+      }
 
       renderRoadmap();
       calculateRequirements();
@@ -1082,6 +1186,9 @@
         } else {
           console.warn("시즌 종료 날짜를 찾지 못했습니다.");
         }
+
+        // 시즌 식별값: 시즌 이름을 우선 사용하고, 없으면 종료 날짜로 대체한다.
+        currentSeasonKey = seasonName || (seasonEnd ? `end-${seasonEnd}` : "");
 
         // 보상 테이블
         const table = findBattlePassTable(doc);

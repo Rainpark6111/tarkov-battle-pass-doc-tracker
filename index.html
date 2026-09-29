@@ -58,6 +58,32 @@
       letter-spacing: 0.5px;
     }
 
+    .season-name {
+      color: #ffd36a;
+      font-weight: 700;
+      text-shadow:
+        0 0 4px rgba(255, 190, 70, 0.7),
+        0 0 10px rgba(255, 160, 40, 0.45),
+        0 0 18px rgba(255, 140, 20, 0.25);
+      animation: seasonGlow 2.5s ease-in-out infinite alternate;
+    }
+    
+    @keyframes seasonGlow {
+      from {
+        text-shadow:
+          0 0 4px rgba(255, 190, 70, 0.55),
+          0 0 8px rgba(255, 160, 40, 0.3),
+          0 0 14px rgba(255, 140, 20, 0.15);
+      }
+    
+      to {
+        text-shadow:
+          0 0 6px rgba(255, 210, 100, 0.9),
+          0 0 14px rgba(255, 170, 50, 0.65),
+          0 0 24px rgba(255, 140, 20, 0.35);
+      }
+    }
+
     #seasonName {
       color: var(--text-dim);
       font-size: 0.9rem;
@@ -495,7 +521,7 @@
     <a href="https://www.escapefromtarkov.com/" target="_blank">
       <img src="https://www.escapefromtarkov.com/build-eft-site/_nuxt/logo.WO0wViWU.webp" alt="Escape from Tarkov">
     </a>
-    <h1>Tarkov Battle Pass Tracker <span id="seasonName"></span></h1>
+    <h1>Tarkov Battle Pass Tracker<span id="seasonName" class="season-name"></span></h1>
   </header>
 
   <div class="main-container">

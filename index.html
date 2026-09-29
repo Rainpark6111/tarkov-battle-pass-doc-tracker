@@ -419,6 +419,43 @@
 
     .cost-tag img { width: 12px; height: 12px; }
 
+    /* ===== REWARD HOVER PREVIEW ===== */
+    .reward-preview {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 900;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      background-color: var(--panel-bg);
+      border: 1px solid var(--accent-color);
+      border-radius: 8px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+      pointer-events: none;
+      max-width: 260px;
+    }
+
+    .reward-preview.show { display: flex; }
+
+    .reward-preview img {
+      width: 220px;
+      height: 220px;
+      object-fit: contain;
+      background-color: rgba(0,0,0,0.3);
+      border-radius: 6px;
+    }
+
+    .reward-preview-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+      text-align: center;
+      word-break: keep-all;
+    }
+
     /* ===== BOTTOM PANEL ===== */
     .bottom-panel {
       height: 220px;
@@ -433,6 +470,31 @@
     }
 
     .panel-title { font-size: 0.9rem; font-weight: bold; color: var(--accent-color); }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .daily-limit { display: flex; align-items: center; gap: 8px; }
+
+    .daily-limit-label { font-size: 0.8rem; color: var(--text-dim); font-weight: bold; }
+
+    .daily-limit-box {
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: var(--text-color);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .daily-limit-box .sep { color: var(--text-dim); margin: 0 4px; }
+    .daily-limit-box .val { color: var(--accent-color); }
 
     .docs-grid {
       display: grid;
@@ -638,11 +700,26 @@
       <div class="roadmap-scroll" id="roadmapContainer"></div>
 
       <div class="bottom-panel">
-        <div class="panel-title">문서 보유량 및 필요 수량</div>
+        <div class="panel-header">
+          <div class="panel-title">문서 보유량 및 필요 수량</div>
+
+          <div class="daily-limit">
+            <span class="daily-limit-label">일일 획득 제한</span>
+            <span class="daily-limit-box">PVE<span class="sep">|</span><span class="val">15</span></span>
+            <span class="daily-limit-box">PVP<span class="sep">|</span><span class="val">20</span></span>
+            <span class="daily-limit-box">SPVP<span class="sep">|</span><span class="val">30</span></span>
+          </div>
+        </div>
         <div class="docs-grid" id="docsGrid"></div>
       </div>
     </div>
 
+  </div>
+
+  <!-- REWARD HOVER PREVIEW -->
+  <div class="reward-preview" id="rewardPreview">
+    <img id="rewardPreviewImg" alt="">
+    <div class="reward-preview-name" id="rewardPreviewName"></div>
   </div>
 
   <!-- EDIT MODAL -->
@@ -1412,7 +1489,50 @@
         toggleRewardClaim(reward);
       });
 
+      // 마우스 오버 시 큰 이미지 + 이름 오버레이 표시
+      card.addEventListener("mouseenter", event => showRewardPreview(reward, event));
+      card.addEventListener("mousemove", positionRewardPreview);
+      card.addEventListener("mouseleave", hideRewardPreview);
+
       return card;
+    }
+
+    /* ===== REWARD HOVER PREVIEW ===== */
+
+    function showRewardPreview(reward, event) {
+      const preview = $("rewardPreview");
+      const img = $("rewardPreviewImg");
+
+      img.onerror = () => { img.onerror = null; img.src = "https://via.placeholder.com/220?text=Reward"; };
+      img.src = reward.icon || "https://via.placeholder.com/220?text=Reward";
+      img.alt = reward.name;
+      $("rewardPreviewName").textContent = reward.name;
+
+      preview.classList.add("show");
+      positionRewardPreview(event);
+    }
+
+    function positionRewardPreview(event) {
+      const preview = $("rewardPreview");
+      if (!preview.classList.contains("show")) return;
+
+      const gap = 18;
+      const w = preview.offsetWidth;
+      const h = preview.offsetHeight;
+
+      let x = event.clientX + gap;
+      let y = event.clientY + gap;
+
+      // 화면 밖으로 나가면 반대편으로 뒤집기
+      if (x + w > window.innerWidth - 8) x = event.clientX - w - gap;
+      if (y + h > window.innerHeight - 8) y = event.clientY - h - gap;
+
+      preview.style.left = Math.max(8, x) + "px";
+      preview.style.top = Math.max(8, y) + "px";
+    }
+
+    function hideRewardPreview() {
+      $("rewardPreview").classList.remove("show");
     }
 
     function createPageColumn(p) {
@@ -1455,6 +1575,7 @@
       const container = $("roadmapContainer");
       const previousScrollLeft = container.scrollLeft;
 
+      hideRewardPreview();
       container.innerHTML = "";
       roadmapPages.forEach(p => container.appendChild(createPageColumn(p)));
 

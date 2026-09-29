@@ -670,6 +670,8 @@
         const rows = targetTable.querySelectorAll("tbody tr");
 
         rows.forEach((tr, idx) => {
+          if (idx === 0) return; // 첫 번째 행(헤더) 제외
+
           // th와 td를 모두 가져옵니다.
           const cells = tr.querySelectorAll("th, td");
           if (cells.length < 3) return;
@@ -719,7 +721,6 @@
         console.warn("Fandom Wiki fetch failed, fallback to default.", err);
       }
     }
-
     // 3. 로드맵 UI 렌더링
     function renderRoadmap() {
       const container = document.getElementById("roadmapContainer");

@@ -15,8 +15,8 @@
       --highlight-color: #ff9800;
       --text-color: #e0e0e0;
       --text-dim: #9e9e9e;
-      --claiMD-bg: rgba(76, 175, 80, 0.25);
-      --claiMD-border: #4caf50;
+      --claimed-bg: rgba(76, 175, 80, 0.25);
+      --claimed-border: #4caf50;
       --timer-color: #7ddcff;
       --timer-glow: rgba(93, 211, 255, 0.85);
     }
@@ -76,7 +76,7 @@
         0 0 12px rgba(255, 255, 255, 0.8),
         0 0 18px rgba(255, 255, 255, 0.55);
 
-      animation: seasonGlow 1.8s ease-in-out inFDite alternate;
+      animation: seasonGlow 1.8s ease-in-out infinite alternate;
     }
 
     @keyframes seasonGlow {
@@ -142,7 +142,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      UD-select: none;
+      user-select: none;
     }
 
     .progress-title {
@@ -161,7 +161,7 @@
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
       text-shadow: 0 0 2px #fff, 0 0 5px rgba(93,255,138,.85), 0 0 9px rgba(93,255,138,.85), 0 0 15px rgba(93,255,138,.7), 0 0 24px rgba(93,255,138,.4);
-      animation: progressTextGlow 1.8s ease-in-out inFDite alternate;
+      animation: progressTextGlow 1.8s ease-in-out infinite alternate;
     }
 
     @keyframes progressTextGlow {
@@ -175,7 +175,7 @@
       flex-direction: column;
       align-items: flex-end;
       justify-content: center;
-      UD-select: none;
+      user-select: none;
     }
 
     .season-countdown-title {
@@ -194,7 +194,7 @@
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
       text-shadow: 0 0 2px #fff, 0 0 5px var(--timer-glow), 0 0 9px var(--timer-glow), 0 0 15px rgba(93,211,255,.7), 0 0 24px rgba(93,211,255,.4);
-      animation: countdownGlow 1.8s ease-in-out inFDite alternate;
+      animation: countdownGlow 1.8s ease-in-out infinite alternate;
     }
 
     @keyframes countdownGlow {
@@ -302,7 +302,7 @@
     .roadmap-column.page-toggleable { cursor: pointer; }
     .roadmap-column.page-toggleable:hover { border-color: #596271; }
 
-    .roadmap-column.page-claiMD {
+    .roadmap-column.page-claimed {
       border-color: rgba(76, 175, 80, 0.75);
       box-shadow: 0 0 8px rgba(76,175,80,0.18), inset 0 0 12px rgba(76,175,80,0.06);
     }
@@ -317,7 +317,7 @@
       font-weight: bold;
       color: var(--accent-color);
       cursor: pointer;
-      UD-select: none;
+      user-select: none;
       transition: background-color 0.2s ease, color 0.2s ease;
     }
 
@@ -333,7 +333,7 @@
       transition: all 0.2s ease;
     }
 
-    .roadmap-column.page-claiMD .page-claim-indicator {
+    .roadmap-column.page-claimed .page-claim-indicator {
       background: #4caf50;
       box-shadow: 0 0 5px rgba(76,175,80,0.8), 0 0 10px rgba(76,175,80,0.45);
     }
@@ -341,7 +341,7 @@
     .page-req { font-size: 0.75rem; color: var(--text-dim); }
 
     .page-status-text { font-size: 0.62rem; color: var(--text-dim); font-weight: 500; }
-    .roadmap-column.page-claiMD .page-status-text { color: #6fd676; }
+    .roadmap-column.page-claimed .page-status-text { color: #6fd676; }
 
     .column-body {
       padding: 10px;
@@ -365,14 +365,14 @@
       gap: 6px;
       cursor: pointer;
       transition: all 0.2s ease;
-      UD-select: none;
+      user-select: none;
     }
 
     .reward-card:hover { border-color: #555d6d; }
 
-    .reward-card.claiMD {
-      background-color: var(--claiMD-bg);
-      border-color: var(--claiMD-border);
+    .reward-card.claimed {
+      background-color: var(--claimed-bg);
+      border-color: var(--claimed-border);
       box-shadow: inset 0 0 10px rgba(76,175,80,0.3), 0 0 4px rgba(76,175,80,0.15);
     }
 
@@ -588,7 +588,7 @@
       align-items: center;
     }
 
-    @MDia (max-width: 1100px) {
+    @media (max-width: 1100px) {
       .docs-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
       .bottom-panel { height: 250px; }
     }
@@ -758,13 +758,13 @@
 
     // 표시 순서: 회계 - PMC - 프로젝트 - 설계도 - 테스트 - 사용자 - 의료 - 장비
     const DOCS_DATA = {
-      FD:   { name: "회계 문서",     en: "FDancial", file: "FD.webp" },
+      FD:   { name: "회계 문서",     en: "Financial", file: "FD.webp" },
       PMC:  { name: "PMC 인사 기록", en: "PMC personnel",    file: "PMC.webp" },
-      PD:   { name: "프로젝트 문서", en: "PDect",   file: "PD.webp" },
-      BP:   { name: "설계도",        en: "BPprints",          file: "BP.webp" },
-      TD:   { name: "테스트 문서",   en: "TD",      file: "TD.webp" },
-      UD:   { name: "사용자 문서",   en: "UD",      file: "UD.webp" },
-      MD:   { name: "의료 문서",     en: "MDical",   file: "MD.webp" },
+      PD:   { name: "프로젝트 문서", en: "Project",   file: "PD.webp" },
+      BP:   { name: "설계도",        en: "Blueprints",          file: "BP.webp" },
+      TD:   { name: "테스트 문서",   en: "Test",      file: "TD.webp" },
+      UD:   { name: "사용자 문서",   en: "User",      file: "UD.webp" },
+      MD:   { name: "의료 문서",     en: "Medical",   file: "MD.webp" },
       Tech: { name: "장비 문서",     en: "Technical", file: "Tech.webp" }
     };
 
@@ -804,9 +804,9 @@
     const loadStore = key => JSON.parse(localStorage.getItem(key) || "{}");
     const saveStore = (key, value) => localStorage.setItem(key, JSON.stringify(value));
 
-    let UDCosts = loadStore("eft_UD_costs");
-    let UDInventory = loadStore("eft_UD_inventory");
-    let claiMDRewards = loadStore("eft_claiMD_rewards");
+    let userCosts = loadStore("eft_user_costs");
+    let userInventory = loadStore("eft_user_inventory");
+    let claimedRewards = loadStore("eft_claimed_rewards");
 
     let selectedMap = null;
     let selectedDoc = null;
@@ -823,7 +823,7 @@
 
     const $ = id => document.getElementById(id);
     const cleanText = el => (el?.innerText || el?.textContent || "").replace(/\s+/g, " ").trim();
-    const getCosts = reward => UDCosts[reward.id] || reward.defaultCosts;
+    const getCosts = reward => userCosts[reward.id] || reward.defaultCosts;
 
     /* =========================================================
        RESET (SEASON CHANGE / MANUAL)
@@ -831,14 +831,14 @@
 
     /*
      * 수동 초기화: 클레임 상태와 문서 보유량만 초기화한다.
-     * Edit Costs로 수정한 재화(UDCosts)는 그대로 유지한다.
+     * Edit Costs로 수정한 재화(userCosts)는 그대로 유지한다.
      */
     function resetClaimsAndInventory() {
-      claiMDRewards = {};
-      UDInventory = {};
+      claimedRewards = {};
+      userInventory = {};
 
-      saveStore("eft_claiMD_rewards", claiMDRewards);
-      saveStore("eft_UD_inventory", UDInventory);
+      saveStore("eft_claimed_rewards", claimedRewards);
+      saveStore("eft_user_inventory", userInventory);
     }
 
     /*
@@ -847,8 +847,8 @@
     function resetAllProgress() {
       resetClaimsAndInventory();
 
-      UDCosts = {};
-      saveStore("eft_UD_costs", UDCosts);
+      userCosts = {};
+      saveStore("eft_user_costs", userCosts);
     }
 
     /*
@@ -960,7 +960,7 @@
         }
       });
 
-      const mapObj = MAPS_DATA.FDd(m => m.name === selectedMap);
+      const mapObj = MAPS_DATA.find(m => m.name === selectedMap);
 
       Object.keys(DOCS_DATA).forEach(code => {
         const el = $(`doc-item-${code}`);
@@ -984,7 +984,7 @@
 
       Object.keys(DOCS_DATA).forEach(code => {
         const doc = DOCS_DATA[code];
-        const count = UDInventory[code] || 0;
+        const count = userInventory[code] || 0;
 
         const item = document.createElement("div");
         item.className = "doc-item";
@@ -1010,8 +1010,8 @@
         const input = item.querySelector(".doc-input");
 
         input.addEventListener("change", e => {
-          UDInventory[code] = parseInt(e.target.value) || 0;
-          saveStore("eft_UD_inventory", UDInventory);
+          userInventory[code] = parseInt(e.target.value) || 0;
+          saveStore("eft_user_inventory", userInventory);
           calculateRequirements();
         });
 
@@ -1089,7 +1089,7 @@
         const day = parseInt(match[2], 10);
         const year = parseInt(match[3], 10);
 
-        if (month === undeFDed || !day || !year) continue;
+        if (month === undefined || !day || !year) continue;
 
         // UTC+3의 11:59:59 = UTC 08:59:59
         return Date.UTC(year, month, day, 8, 59, 59, 999);
@@ -1099,7 +1099,7 @@
     }
 
     function setSeasonEndTimestamp(timestamp) {
-      seasonEndTimestamp = timestamp && Number.isFDite(timestamp) ? timestamp : null;
+      seasonEndTimestamp = timestamp && Number.isFinite(timestamp) ? timestamp : null;
       updateSeasonCountdown();
     }
 
@@ -1185,11 +1185,11 @@
       return "";
     }
 
-    function FDdBattlePassTable(doc) {
+    function findBattlePassTable(doc) {
       const tables = [...doc.querySelectorAll("table.wikitable, table")];
       if (tables.length === 0) return null;
 
-      return tables.FDd(table => {
+      return tables.find(table => {
         const text = cleanText(table).toLowerCase();
 
         return (
@@ -1202,17 +1202,17 @@
 
     function parseBattlePassRows(table) {
       const getCells = tr => [...tr.querySelectorAll(":scope > th, :scope > td")];
-      const isPriceHeader = text => /^price(?:\s*\(bp\))?$/i.TD(text);
+      const isPriceHeader = text => /^price(?:\s*\(bp\))?$/i.test(text);
       const rows = [...table.querySelectorAll("tr")];
 
       // 가격 열 위치는 헤더 행에서 한 번만 찾는다.
       let priceIndex = -1;
-      const headerRow = rows.FDd(r => getCells(r).some(c => isPriceHeader(cleanText(c))));
+      const headerRow = rows.find(r => getCells(r).some(c => isPriceHeader(cleanText(c))));
 
       if (headerRow) {
         priceIndex = getCells(headerRow)
           .map(c => cleanText(c).toLowerCase())
-          .FDdIndex(v => v === "price (bp)" || v === "price");
+          .findIndex(v => v === "price (bp)" || v === "price");
       }
 
       const parsedPages = [];
@@ -1233,7 +1233,7 @@
         const rowText = cellText.join(" ");
 
         // 헤더 행 제외
-        if (/^level$/i.TD(cellText[0]) || cellText.some(isPriceHeader)) return;
+        if (/^level$/i.test(cellText[0]) || cellText.some(isPriceHeader)) return;
 
         // Page 구분
         const pageMatch = rowText.match(/\bPage\s+(\d+)\b/i);
@@ -1250,13 +1250,13 @@
         }
 
         // 보상 이름
-        const nameCell = cells[2] || cells.FDd((c, i) => i > 1 && (c.innerText || "").trim());
+        const nameCell = cells[2] || cells.find((c, i) => i > 1 && (c.innerText || "").trim());
         const rewardName = cleanText(nameCell);
 
-        if (!rewardName || /^(name|type)$/i.TD(rewardName)) return;
+        if (!rewardName || /^(name|type)$/i.test(rewardName)) return;
 
         // 아이콘
-        const imgEl = cells[1]?.querySelector("img") || cells.FDd(c => c.querySelector("img"))?.querySelector("img");
+        const imgEl = cells[1]?.querySelector("img") || cells.find(c => c.querySelector("img"))?.querySelector("img");
 
         const iconSrc = imgEl
           ? imgEl.getAttribute("data-src") || imgEl.getAttribute("data-lazy-src") || imgEl.getAttribute("src") || ""
@@ -1265,7 +1265,7 @@
         // 가격
         const priceText = priceIndex >= 0
           ? cellText[priceIndex]
-          : cellText.slice(3).reverse().FDd(v => /^\d+$/.TD(v)) || "1";
+          : cellText.slice(3).reverse().find(v => /^\d+$/.test(v)) || "1";
 
         const priceMatch = String(priceText).match(/\d+/);
         const price = priceMatch ? Math.max(1, parseInt(priceMatch[0], 10)) : 1;
@@ -1313,7 +1313,7 @@
         currentSeasonKey = seasonName || (seasonEnd ? `end-${seasonEnd}` : "");
 
         // 보상 테이블
-        const table = FDdBattlePassTable(doc);
+        const table = findBattlePassTable(doc);
 
         if (!table) {
           console.warn("BattlePass 테이블을 찾지 못했습니다.");
@@ -1337,12 +1337,12 @@
        PAGE CLAIM STATE
     ========================================================= */
 
-    function saveClaiMD() {
-      saveStore("eft_claiMD_rewards", claiMDRewards);
+    function saveClaimed() {
+      saveStore("eft_claimed_rewards", claimedRewards);
     }
 
-    function isPageFullyClaiMD(page) {
-      return !!page?.rewards?.length && page.rewards.every(r => !!claiMDRewards[r.id]);
+    function isPageFullyClaimed(page) {
+      return !!page?.rewards?.length && page.rewards.every(r => !!claimedRewards[r.id]);
     }
 
     /*
@@ -1352,23 +1352,23 @@
     function togglePageClaim(page) {
       if (!page?.rewards) return;
 
-      const fullyClaiMD = isPageFullyClaiMD(page);
+      const fullyClaimed = isPageFullyClaimed(page);
 
       page.rewards.forEach(reward => {
-        if (fullyClaiMD) delete claiMDRewards[reward.id];
-        else claiMDRewards[reward.id] = true;
+        if (fullyClaimed) delete claimedRewards[reward.id];
+        else claimedRewards[reward.id] = true;
       });
 
-      saveClaiMD();
+      saveClaimed();
       renderRoadmap();
       calculateRequirements();
     }
 
     function toggleRewardClaim(reward) {
-      if (claiMDRewards[reward.id]) delete claiMDRewards[reward.id];
-      else claiMDRewards[reward.id] = true;
+      if (claimedRewards[reward.id]) delete claimedRewards[reward.id];
+      else claimedRewards[reward.id] = true;
 
-      saveClaiMD();
+      saveClaimed();
       renderRoadmap();
       calculateRequirements();
     }
@@ -1377,8 +1377,8 @@
        SCROLL
     ========================================================= */
 
-    function FDdFirstUnclaiMDPageIndex() {
-  const index = roadmapPages.FDdIndex(page => page.rewards.some(r => !claiMDRewards[r.id]));
+    function findFirstUnclaimedPageIndex() {
+  const index = roadmapPages.findIndex(page => page.rewards.some(r => !claimedRewards[r.id]));
   return index >= 0 ? index : Math.max(0, roadmapPages.length - 1);
 }
 
@@ -1386,26 +1386,26 @@
 let wheelTargetScroll = null;
 let wheelRafId = null;
 
-function scrollToFirstUnclaiMDPage(behavior = "smooth") {
+function scrollToFirstUnclaimedPage(behavior = "smooth") {
   const container = $("roadmapContainer");
   if (!container || roadmapPages.length === 0) return;
 
-  const targetIndex = FDdFirstUnclaiMDPageIndex();
+  const targetIndex = findFirstUnclaimedPageIndex();
   const targetColumn = container.children[targetIndex];
   if (!targetColumn) return;
 
   // flex gap 및 offsetLeft 오차 없이 정확한 상대 좌표 계산
   const targetLeft = targetColumn.getBoundingClientRect().left - container.getBoundingClientRect().left + container.scrollLeft - 15;
-  const FDalScroll = Math.max(0, targetLeft);
+  const finalScroll = Math.max(0, targetLeft);
 
   // 진행 중인 휠 애니메이션 정지 및 타겟 위치 동기화
   if (wheelRafId) {
     cancelAnimationFrame(wheelRafId);
     wheelRafId = null;
   }
-  wheelTargetScroll = FDalScroll;
+  wheelTargetScroll = finalScroll;
 
-  container.scrollTo({ left: FDalScroll, behavior });
+  container.scrollTo({ left: finalScroll, behavior });
 }
 
 function setupHorizontalWheel() {
@@ -1453,10 +1453,10 @@ function setupHorizontalWheel() {
 
     function createRewardCard(reward) {
       const card = document.createElement("div");
-      const isClaiMD = !!claiMDRewards[reward.id];
+      const isClaimed = !!claimedRewards[reward.id];
       const costs = getCosts(reward);
 
-      card.className = `reward-card ${isClaiMD ? "claiMD" : ""}`;
+      card.className = `reward-card ${isClaimed ? "claimed" : ""}`;
 
       const costTags = Object.keys(costs)
         .filter(code => costs[code] > 0 && DOCS_DATA[code])
@@ -1539,11 +1539,11 @@ function setupHorizontalWheel() {
     }
 
     function createPageColumn(p) {
-      const fullyClaiMD = isPageFullyClaiMD(p);
+      const fullyClaimed = isPageFullyClaimed(p);
 
       const col = document.createElement("div");
       col.className = "roadmap-column page-toggleable";
-      if (fullyClaiMD) col.classList.add("page-claiMD");
+      if (fullyClaimed) col.classList.add("page-claimed");
 
       // 페이지 영역 클릭 → 페이지 전체 보상 토글
       col.addEventListener("click", () => togglePageClaim(p));
@@ -1556,7 +1556,7 @@ function setupHorizontalWheel() {
           <span>Page ${p.page}</span>
         </div>
         <span class="page-req">${p.req || ""}</span>
-        <span class="page-status-text">${fullyClaiMD ? "CLAIMD" : "UNCLAIMD"}</span>
+        <span class="page-status-text">${fullyClaimed ? "CLAIMED" : "UNCLAIMED"}</span>
       `;
       col.appendChild(header);
 
@@ -1585,7 +1585,7 @@ function setupHorizontalWheel() {
       requestAnimationFrame(() => {
         if (isInitialLoad) {
           // 초기화/최초 진입 시 정확히 첫 미획득 페이지로 이동
-          scrollToFirstUnclaiMDPage("auto");
+          scrollToFirstUnclaimedPage("auto");
         } else {
           // 보상 클릭 시 휠 애니메이션 변수를 현재 위치로 고정하여 스크롤 튐 방지
           if (wheelRafId) {
@@ -1606,7 +1606,7 @@ function setupHorizontalWheel() {
       let reward = null;
 
       for (const p of roadmapPages) {
-        reward = p.rewards.FDd(r => r.id === rewardId);
+        reward = p.rewards.find(r => r.id === rewardId);
         if (reward) break;
       }
 
@@ -1646,7 +1646,7 @@ function setupHorizontalWheel() {
     }
 
     function refreshAfterCostChange() {
-      saveStore("eft_UD_costs", UDCosts);
+      saveStore("eft_user_costs", userCosts);
       closeModal();
       renderRoadmap();
       calculateRequirements();
@@ -1670,14 +1670,14 @@ function setupHorizontalWheel() {
         return;
       }
 
-      UDCosts[currentEditReward.id] = newCosts;
+      userCosts[currentEditReward.id] = newCosts;
       refreshAfterCostChange();
     });
 
     $("modalResetBtn").addEventListener("click", () => {
       if (!currentEditReward) return;
 
-      delete UDCosts[currentEditReward.id];
+      delete userCosts[currentEditReward.id];
       refreshAfterCostChange();
     });
 
@@ -1696,16 +1696,16 @@ function setupHorizontalWheel() {
       if (!countEl) return;
 
       let total = 0;
-      let claiMD = 0;
+      let claimed = 0;
 
       roadmapPages.forEach(p => {
         p.rewards.forEach(r => {
           total++;
-          if (claiMDRewards[r.id]) claiMD++;
+          if (claimedRewards[r.id]) claimed++;
         });
       });
 
-      countEl.textContent = `${claiMD} / ${total}`;
+      countEl.textContent = `${claimed} / ${total}`;
     }
 
     /* =========================================================
@@ -1721,19 +1721,19 @@ function setupHorizontalWheel() {
       // 미수령 보상만 합산
       roadmapPages.forEach(p => {
         p.rewards.forEach(r => {
-          if (claiMDRewards[r.id]) return;
+          if (claimedRewards[r.id]) return;
 
           const costs = getCosts(r);
 
           Object.keys(costs).forEach(code => {
-            if (totals[code] !== undeFDed) totals[code] += costs[code];
+            if (totals[code] !== undefined) totals[code] += costs[code];
           });
         });
       });
 
       // 보유량 차감 후 표시
       Object.keys(totals).forEach(code => {
-        const remain = Math.max(0, totals[code] - (UDInventory[code] || 0));
+        const remain = Math.max(0, totals[code] - (userInventory[code] || 0));
         const reqEl = $(`req-${code}`);
         if (!reqEl) return;
 

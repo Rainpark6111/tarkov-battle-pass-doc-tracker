@@ -876,13 +876,9 @@
 
       resetClaimsAndInventory();
 
-      // 초기화 후에는 첫 페이지 기준으로 다시 그린다.
-      const container = $("roadmapContainer");
-      if (container) container.scrollLeft = 0;
-
       renderDocsGrid();
       updateHighlights();
-      renderRoadmap();
+      renderRoadmap(true);
       calculateRequirements();
     }
 
@@ -904,7 +900,8 @@
         updateHighlights();
       }
 
-      renderRoadmap();
+      // 최초 진입 시 isInitialLoad 플래그(true) 전달
+      renderRoadmap(true);
       calculateRequirements();
       setupHorizontalWheel();
       startSeasonCountdown();
@@ -1381,68 +1378,74 @@
     ========================================================= */
 
     function findFirstUnclaimedPageIndex() {
-      const index = roadmapPages.findIndex(page => page.rewards.some(r => !claimedRewards[r.id]));
+  const index = roadmapPages.findIndex(page => page.rewards.some(r => !claimedRewards[r.id]));
+  return index >= 0 ? index : Math.max(0, roadmapPages.length - 1);
+}
 
-      // 전부 획득했다면 마지막 페이지
-      return index >= 0 ? index : Math.max(0, roadmapPages.length - 1);
+// 휠 스크롤 애니메이션 타겟을 동기화하기 위한 전역 변수
+let wheelTargetScroll = null;
+let wheelRafId = null;
+
+function scrollToFirstUnclaimedPage(behavior = "smooth") {
+  const container = $("roadmapContainer");
+  if (!container || roadmapPages.length === 0) return;
+
+  const targetIndex = findFirstUnclaimedPageIndex();
+  const targetColumn = container.children[targetIndex];
+  if (!targetColumn) return;
+
+  // flex gap 및 offsetLeft 오차 없이 정확한 상대 좌표 계산
+  const targetLeft = targetColumn.getBoundingClientRect().left - container.getBoundingClientRect().left + container.scrollLeft - 15;
+  const finalScroll = Math.max(0, targetLeft);
+
+  // 진행 중인 휠 애니메이션 정지 및 타겟 위치 동기화
+  if (wheelRafId) {
+    cancelAnimationFrame(wheelRafId);
+    wheelRafId = null;
+  }
+  wheelTargetScroll = finalScroll;
+
+  container.scrollTo({ left: finalScroll, behavior });
+}
+
+function setupHorizontalWheel() {
+  const container = $("roadmapContainer");
+  if (!container) return;
+
+  const animate = () => {
+    if (wheelTargetScroll === null) return;
+    const diff = wheelTargetScroll - container.scrollLeft;
+
+    if (Math.abs(diff) < 1) {
+      container.scrollLeft = wheelTargetScroll;
+      wheelRafId = null;
+      return;
     }
 
-    function scrollToFirstUnclaimedPage(behavior = "smooth") {
-      const container = $("roadmapContainer");
-      if (!container || roadmapPages.length === 0) return;
+    let step = diff * WHEEL_EASING;
+    if (Math.abs(step) < 1) step = Math.sign(diff);
 
-      const targetColumn = container.children[findFirstUnclaimedPageIndex()];
-      if (!targetColumn) return;
+    container.scrollLeft += step;
+    wheelRafId = requestAnimationFrame(animate);
+  };
 
-      // 컨테이너 좌측 padding(15px)만큼 여유를 둔다.
-      container.scrollTo({ left: Math.max(0, targetColumn.offsetLeft - 15), behavior });
+  container.addEventListener("wheel", event => {
+    if (event.shiftKey || event.ctrlKey) return;
+    event.preventDefault();
+
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? container.clientWidth : 1;
+    const raw = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+    const max = container.scrollWidth - container.clientWidth;
+
+    if (!wheelRafId || wheelTargetScroll === null) {
+      wheelTargetScroll = container.scrollLeft;
     }
 
-    /*
-     * 마우스 휠(세로) 입력을 가로 스크롤로 변환한다.
-     * WHEEL_SPEED 배율로 이동 범위를 늘리고, 목표 위치까지 부드럽게 이동한다.
-     */
-    function setupHorizontalWheel() {
-      const container = $("roadmapContainer");
-      if (!container) return;
+    wheelTargetScroll = Math.max(0, Math.min(max, wheelTargetScroll + raw * unit * WHEEL_SPEED));
 
-      let target = container.scrollLeft;
-      let rafId = null;
-
-      const animate = () => {
-        const diff = target - container.scrollLeft;
-
-        if (Math.abs(diff) < 1) {
-          container.scrollLeft = target;
-          rafId = null;
-          return;
-        }
-
-        let step = diff * WHEEL_EASING;
-        if (Math.abs(step) < 1) step = Math.sign(diff);
-
-        container.scrollLeft += step;
-        rafId = requestAnimationFrame(animate);
-      };
-
-      container.addEventListener("wheel", event => {
-        // Shift / Ctrl + 휠은 브라우저 기본 동작 유지
-        if (event.shiftKey || event.ctrlKey) return;
-
-        event.preventDefault();
-
-        // deltaMode: 0 = pixel, 1 = line, 2 = page
-        const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? container.clientWidth : 1;
-        const raw = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
-        const max = container.scrollWidth - container.clientWidth;
-
-        if (!rafId) target = container.scrollLeft;
-
-        target = Math.max(0, Math.min(max, target + raw * unit * WHEEL_SPEED));
-
-        if (!rafId) rafId = requestAnimationFrame(animate);
-      }, { passive: false });
-    }
+    if (!wheelRafId) wheelRafId = requestAnimationFrame(animate);
+  }, { passive: false });
+}
 
     /* =========================================================
        ROADMAP RENDER
@@ -1571,18 +1574,27 @@
       return col;
     }
 
-    function renderRoadmap() {
+    function renderRoadmap(isInitialLoad = false) {
       const container = $("roadmapContainer");
-      const previousScrollLeft = container.scrollLeft;
+      const currentScrollLeft = container.scrollLeft;
 
       hideRewardPreview();
       container.innerHTML = "";
       roadmapPages.forEach(p => container.appendChild(createPageColumn(p)));
 
-      // 최초 렌더링은 첫 미획득 위치로 이동, 이후에는 보고 있던 위치를 유지한다.
       requestAnimationFrame(() => {
-        if (previousScrollLeft === 0) scrollToFirstUnclaimedPage("auto");
-        else container.scrollLeft = previousScrollLeft;
+        if (isInitialLoad) {
+          // 초기화/최초 진입 시 정확히 첫 미획득 페이지로 이동
+          scrollToFirstUnclaimedPage("auto");
+        } else {
+          // 보상 클릭 시 휠 애니메이션 변수를 현재 위치로 고정하여 스크롤 튐 방지
+          if (wheelRafId) {
+            cancelAnimationFrame(wheelRafId);
+            wheelRafId = null;
+          }
+          container.scrollLeft = currentScrollLeft;
+          wheelTargetScroll = currentScrollLeft;
+        }
       });
     }
 

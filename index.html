@@ -609,51 +609,53 @@
       background-color: var(--panel-bg);
       border: 1px solid var(--accent-color);
       border-radius: 8px;
-      padding: 20px;
-      width: 420px;
+      padding: 30px;
+      width: 630px;
+      max-width: 95vw;
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 22px;
     }
 
-    .modal h3 { color: var(--accent-color); font-size: 1.1rem; text-align: center; }
+    .modal h3 { color: var(--accent-color); font-size: 1.65rem; text-align: center; }
 
-    .modal-price-info { font-size: 0.8rem; color: var(--text-dim); text-align: center; }
+    .modal-price-info { font-size: 1.2rem; color: var(--text-dim); text-align: center; }
 
-    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
     .modal-input-group {
       display: flex;
       align-items: center;
       justify-content: space-between;
       background-color: var(--card-bg);
-      padding: 6px 10px;
-      border-radius: 4px;
+      padding: 9px 15px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
     }
 
-    .modal-input-group label { font-size: 0.75rem; display: flex; align-items: center; gap: 5px; }
-    .modal-input-group label img { width: 14px; height: 14px; }
+    .modal-input-group label { font-size: 1.125rem; display: flex; align-items: center; gap: 8px; }
+    .modal-input-group label img { width: 21px; height: 21px; }
 
     .modal-input-group input {
-      width: 45px;
+      width: 68px;
+      font-size: 1.2rem;
       background-color: #121417;
       border: 1px solid var(--border-color);
       color: #fff;
       text-align: center;
-      padding: 2px;
+      padding: 3px;
       border-radius: 3px;
     }
 
-    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
 
     .btn {
-      padding: 6px 12px;
+      padding: 9px 18px;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
-      font-size: 0.8rem;
+      font-size: 1.2rem;
     }
 
     .btn-save   { background-color: #4caf50; color: #fff; }

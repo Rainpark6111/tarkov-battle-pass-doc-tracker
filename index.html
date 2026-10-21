@@ -663,6 +663,38 @@
     .btn-cancel { background-color: #f44336; color: #fff; }
     .btn-reset  { background-color: #555;    color: #fff; }
 
+    /* ===== 위키 데이터 상태 배너 ===== */
+    .data-status {
+      display: none;
+      position: fixed;
+      top: 64px;
+      right: 12px;
+      z-index: 9999;
+      max-width: min(92vw, 380px);
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #2b1a1a;
+      border: 1px solid #a34848;
+      color: #ffd9d9;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+    .data-status.show { display: block; }
+    .data-status summary { cursor: pointer; margin-top: 6px; opacity: 0.85; }
+    .data-status-detail { white-space: pre-wrap; margin-top: 4px; font-size: 0.74rem; opacity: 0.85; }
+    .data-status-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .data-status-actions button {
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 1px solid #a34848;
+      background: #3d2323;
+      color: #ffd9d9;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .data-status-actions button:hover { background: #5a3030; }
+
     /* =========================================================
        TABLET LANDSCAPE (901px ~ 1366px)
        - 화면 고정(100dvh) 레이아웃은 유지하되, 잘리던 영역을 압축/스크롤 처리
@@ -921,6 +953,8 @@
 </head>
 
 <body>
+
+  <div id="dataStatus" class="data-status" role="status"></div>
 
   <!-- HEADER -->
   <header>
@@ -1425,49 +1459,173 @@
        FANDOM DATA FETCH
     ========================================================= */
 
-    async function fetchFandomHtml() {
+    const FANDOM_CACHE_KEY = "eft_fandom_cache_v1";
+    const FETCH_TIMEOUT_MS = 7000;
+
+    // 타임아웃 + 실패 원인 기록이 있는 fetch
+    async function fetchText(url, label, errors) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+
+      try {
+        const res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.text();
+      } catch (e) {
+        const reason = e.name === "AbortError"
+          ? "시간 초과"
+          : (e.message === "Failed to fetch" ? "차단됨 (CORS / 확장프로그램 / 네트워크)" : e.message);
+        errors.push(`${label}: ${reason}`);
+        console.warn(`[Fandom] ${label} 실패:`, e);
+        throw e;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // 여러 주소를 동시에 시도해서 유효한 HTML이 먼저 오는 쪽을 사용한다.
+    async function firstValidHtml(sources, errors) {
+      try {
+        return await Promise.any(sources.map(async src => {
+          const text = await fetchText(src.url, src.label, errors);
+          const html = src.extract(text);
+
+          if (!html || !html.includes("<table")) {
+            errors.push(`${src.label}: 응답에 표(table)가 없음`);
+            throw new Error("no table");
+          }
+          return html;
+        }));
+      } catch (e) {
+        return "";
+      }
+    }
+
+    async function fetchFandomHtml(errors) {
       const targetPage = "BattlePass";
       const wikiUrl = `https://escapefromtarkov.fandom.com/wiki/${targetPage}`;
       const page = encodeURIComponent(targetPage);
+      const encWiki = encodeURIComponent(wikiUrl);
+      const raw = text => text;
 
-      const apiUrls = [
-        `https://escapefromtarkov.fandom.com/api.php?action=parse&page=${page}&prop=text&format=json&origin=*`,
-        `https://escapefromtarkov.fandom.com/api.php?action=parse&page=${page}&prop=text&format=json&origin=https://escapefromtarkov.fandom.com`
-      ];
-
-      const proxyUrls = [
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(wikiUrl)}`,
-        `https://corsproxy.io/?${encodeURIComponent(wikiUrl)}`
-      ];
-
-      // 1. Fandom API
-      for (const url of apiUrls) {
-        try {
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) continue;
-
-          const data = await res.json();
-          const apiHtml = data?.parse?.text?.["*"];
-          if (apiHtml) return apiHtml;
-        } catch (e) {
-          console.warn("Fandom API attempt failed:", e);
+      // 1. Fandom API (우선)
+      const apiHtml = await firstValidHtml([
+        {
+          label: "Fandom API",
+          url: `https://escapefromtarkov.fandom.com/api.php?action=parse&page=${page}&prop=text&format=json&origin=*`,
+          extract: text => JSON.parse(text)?.parse?.text?.["*"]
+        },
+        {
+          label: "Fandom API(origin)",
+          url: `https://escapefromtarkov.fandom.com/api.php?action=parse&page=${page}&prop=text&format=json&origin=https://escapefromtarkov.fandom.com`,
+          extract: text => JSON.parse(text)?.parse?.text?.["*"]
         }
+      ], errors);
+
+      if (apiHtml) return apiHtml;
+
+      // 2. CORS 프록시 (API가 막혔을 때)
+      return await firstValidHtml([
+        { label: "allorigins", url: `https://api.allorigins.win/raw?url=${encWiki}`, extract: raw },
+        { label: "corsproxy.io", url: `https://corsproxy.io/?${encWiki}`, extract: raw },
+        { label: "codetabs", url: `https://api.codetabs.com/v1/proxy?quest=${encWiki}`, extract: raw }
+      ], errors);
+    }
+
+    /* ----- 성공한 파싱 결과 캐시 (연결 실패 시 마지막 데이터 사용) ----- */
+
+    function saveFandomCache(data) {
+      try {
+        localStorage.setItem(FANDOM_CACHE_KEY, JSON.stringify({ ...data, savedAt: Date.now() }));
+      } catch (e) {
+        console.warn("Fandom 캐시 저장 실패:", e);
+      }
+    }
+
+    function loadFandomCache() {
+      try {
+        return JSON.parse(localStorage.getItem(FANDOM_CACHE_KEY) || "null");
+      } catch (e) {
+        return null;
+      }
+    }
+
+    /* ----- 화면 상태 배너 ----- */
+
+    function hideDataStatus() {
+      const el = $("dataStatus");
+      if (el) el.classList.remove("show");
+    }
+
+    function showDataStatus(message, errors = []) {
+      const el = $("dataStatus");
+      if (!el) return;
+
+      el.textContent = "";
+
+      const text = document.createElement("div");
+      text.textContent = message;
+      el.appendChild(text);
+
+      if (errors.length) {
+        const details = document.createElement("details");
+        const summary = document.createElement("summary");
+        summary.textContent = "자세한 원인";
+        details.appendChild(summary);
+
+        const list = document.createElement("div");
+        list.className = "data-status-detail";
+        list.textContent = [...new Set(errors)].join("\n");
+        details.appendChild(list);
+        el.appendChild(details);
       }
 
-      // 2. CORS proxy fallback
-      for (const url of proxyUrls) {
-        try {
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) continue;
+      const actions = document.createElement("div");
+      actions.className = "data-status-actions";
 
-          const html = await res.text();
-          if (html && html.includes("<table")) return html;
-        } catch (e) {
-          console.warn("Fandom proxy attempt failed:", e);
-        }
+      const retry = document.createElement("button");
+      retry.textContent = "다시 시도";
+      retry.addEventListener("click", retryFandom);
+
+      const close = document.createElement("button");
+      close.textContent = "닫기";
+      close.addEventListener("click", hideDataStatus);
+
+      actions.append(retry, close);
+      el.appendChild(actions);
+      el.classList.add("show");
+    }
+
+    function useFallbackData(errors, headline) {
+      errors.unshift(`열린 주소: ${location.protocol === "file:" ? "file:// (로컬 파일로 직접 열림)" : location.origin}`);
+      const cache = loadFandomCache();
+      let msg = `⚠ 위키 데이터를 불러오지 못했습니다 (${headline}). `;
+
+      if (cache?.pages?.length) {
+        roadmapPages = cache.pages;
+        if (cache.seasonName) setSeasonName(cache.seasonName);
+        if (cache.seasonEnd) setSeasonEndTimestamp(cache.seasonEnd);
+        currentSeasonKey = cache.seasonKey || currentSeasonKey;
+        msg += `마지막으로 저장된 데이터(${new Date(cache.savedAt).toLocaleString()})를 표시 중입니다.`;
+      } else {
+        msg += "기본 내장 데이터를 표시 중입니다.";
       }
 
-      return "";
+      showDataStatus(msg, errors);
+    }
+
+    async function retryFandom() {
+      showDataStatus("위키 데이터를 다시 불러오는 중...");
+      await fetchFandomBattlePass();
+
+      if (checkSeasonChange()) {
+        renderDocsGrid();
+        updateHighlights();
+      }
+
+      renderRoadmap(true);
+      calculateRequirements();
+      startSeasonCountdown();
     }
 
     function findBattlePassTable(doc) {
@@ -1570,11 +1728,13 @@
     }
 
     async function fetchFandomBattlePass() {
+      const errors = [];
+
       try {
-        const htmlText = await fetchFandomHtml();
+        const htmlText = await fetchFandomHtml(errors);
 
         if (!htmlText) {
-          console.warn("Fandom BattlePass 데이터를 가져오지 못했습니다. 기본 데이터를 유지합니다.");
+          useFallbackData(errors, "모든 접속 경로 실패");
           return;
         }
 
@@ -1601,7 +1761,7 @@
         const table = findBattlePassTable(doc);
 
         if (!table) {
-          console.warn("BattlePass 테이블을 찾지 못했습니다.");
+          useFallbackData(errors, "BattlePass 표를 찾지 못함");
           return;
         }
 
@@ -1609,12 +1769,17 @@
 
         if (pages.length > 0) {
           roadmapPages = pages;
+          saveFandomCache({ pages, seasonName, seasonEnd, seasonKey: currentSeasonKey });
+          hideDataStatus();
           console.info(`BattlePass 파싱 완료: ${pages.length}개 페이지, ${rewardCount}개 보상`);
         } else {
-          console.warn("BattlePass 보상 데이터를 찾지 못했습니다. 기본 데이터를 유지합니다.");
+          errors.push("표는 찾았지만 보상 행을 해석하지 못함 (위키 표 구조 변경 가능성)");
+          useFallbackData(errors, "보상 데이터 해석 실패");
         }
       } catch (err) {
         console.warn("Fandom Wiki fetch/parse failed, fallback to default.", err);
+        errors.push(`파싱 오류: ${err.message}`);
+        useFallbackData(errors, "파싱 오류");
       }
     }
 

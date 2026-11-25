@@ -998,9 +998,9 @@
 
           <div class="daily-limit">
             <span class="daily-limit-label">일일 획득 제한</span>
-            <span class="daily-limit-box">PVE<span class="sep">|</span><span class="val">15</span></span>
-            <span class="daily-limit-box">PVP<span class="sep">|</span><span class="val">20</span></span>
-            <span class="daily-limit-box">PVP S<span class="sep">|</span><span class="val">30</span></span>
+            <span class="daily-limit-box">PVE<span class="sep">|</span><span class="val" id="limitPve">15</span></span>
+            <span class="daily-limit-box">PVP<span class="sep">|</span><span class="val" id="limitPvp">25</span></span>
+            <span class="daily-limit-box">PVP S<span class="sep">|</span><span class="val" id="limitSeasonal">40</span></span>
           </div>
         </div>
         <div class="docs-grid" id="docsGrid"></div>
@@ -1430,6 +1430,51 @@
     }
 
     /* =========================================================
+       DAILY LIMITS (Limits 항목)
+    ========================================================= */
+
+    // 위키를 읽지 못했을 때 사용할 기본값
+    const DEFAULT_DAILY_LIMITS = { pve: 15, pvp: 25, seasonal: 40 };
+    let dailyLimits = { ...DEFAULT_DAILY_LIMITS };
+
+    /*
+     * Limits 항목의 목록을 찾아 모드별 일일 획득 제한을 만든다.
+     *   * Seasonal game mode: 40 documents
+     *   * PvP game mode: 25 documents
+     *   * PvE game mode: 15 documents
+     * 본문 설명 문장("...PvE game mode and then switch to the seasonal game mode, ...")은
+     * "game mode: 숫자 documents" 형태가 아니라서 걸리지 않는다.
+     * 찾은 모드만 반환하고, 하나도 없으면 null을 반환한다.
+     */
+    function extractDailyLimits(doc) {
+      const text = (doc.body?.innerText || doc.body?.textContent || "").replace(/\s+/g, " ");
+      const re = /\b(Seasonal|PvP|PvE)\s+game\s+mode\s*:\s*(\d+)\s+documents?\b/gi;
+      const keyMap = { seasonal: "seasonal", pvp: "pvp", pve: "pve" };
+      const found = {};
+      let match;
+
+      while ((match = re.exec(text)) !== null) {
+        const key = keyMap[match[1].toLowerCase()];
+        const value = parseInt(match[2], 10);
+        if (key && Number.isFinite(value) && !(key in found)) found[key] = value;
+      }
+
+      return Object.keys(found).length ? found : null;
+    }
+
+    function applyDailyLimits(limits) {
+      if (!limits) return;
+
+      dailyLimits = { ...dailyLimits, ...limits };
+
+      const targets = { pve: "limitPve", pvp: "limitPvp", seasonal: "limitSeasonal" };
+      Object.keys(targets).forEach(key => {
+        const el = $(targets[key]);
+        if (el) el.textContent = dailyLimits[key];
+      });
+    }
+
+    /* =========================================================
        COUNTDOWN
     ========================================================= */
 
@@ -1671,6 +1716,7 @@
         roadmapPages = cache.pages;
         if (cache.seasonName) setSeasonName(cache.seasonName);
         if (cache.seasonEnd) setSeasonEndTimestamp(cache.seasonEnd);
+        if (cache.dailyLimits) applyDailyLimits(cache.dailyLimits);
         currentSeasonKey = cache.seasonKey || currentSeasonKey;
         msg += `마지막으로 저장된 데이터(${new Date(cache.savedAt).toLocaleString()})를 표시 중입니다.`;
       } else {
@@ -1824,6 +1870,16 @@
           console.warn("시즌 종료 날짜를 찾지 못했습니다.");
         }
 
+        // 일일 획득 제한 (Limits 항목)
+        const parsedLimits = extractDailyLimits(doc);
+
+        if (parsedLimits) {
+          applyDailyLimits(parsedLimits);
+          console.info("일일 획득 제한:", dailyLimits);
+        } else {
+          console.warn("일일 획득 제한(Limits)을 찾지 못했습니다.");
+        }
+
         // 시즌 식별값: 시즌 이름을 우선 사용하고, 없으면 종료 날짜로 대체한다.
         currentSeasonKey = seasonName || (seasonEnd ? `end-${seasonEnd}` : "");
 
@@ -1839,7 +1895,7 @@
 
         if (pages.length > 0) {
           roadmapPages = pages;
-          saveFandomCache({ pages, seasonName, seasonEnd, seasonKey: currentSeasonKey });
+          saveFandomCache({ pages, seasonName, seasonEnd, seasonKey: currentSeasonKey, dailyLimits });
           hideDataStatus();
           console.info(`BattlePass 파싱 완료: ${pages.length}개 페이지, ${rewardCount}개 보상`);
         } else {

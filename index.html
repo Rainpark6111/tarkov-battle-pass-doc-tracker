@@ -1350,7 +1350,8 @@
 
       if (doc.title) candidates.push(doc.title);
 
-      doc.querySelectorAll("h1, h2, h3, h4, .mw-parser-output p, .mw-parser-output div").forEach(el => {
+      // div는 목차(1.1 Progression ...)까지 통째로 포함하므로 후보에서 제외한다.
+      doc.querySelectorAll("h1, h2, h3, h4, .mw-parser-output p").forEach(el => {
         const text = cleanText(el);
         if (text) candidates.push(text);
       });
@@ -1367,8 +1368,11 @@
 
         match = candidate.match(/\bSeason\s+\d+\s*[-–—:]\s*([^|\n\r]+)/i);
         if (match) {
-          const name = match[1].trim().replace(/[.!,:;]+$/, "");
-          if (name && name.length < 100) return `Season ${seasonNumber} - "${name}"`;
+          const name = match[1]
+            .split(/\s+\d+(?:\.\d+)+\s/)[0]   // "1.1 Progression" 같은 목차 번호 앞에서 자름
+            .trim()
+            .replace(/[.!,:;]+$/, "");
+          if (name && name.length < 60) return `Season ${seasonNumber} - "${name}"`;
         }
       }
 

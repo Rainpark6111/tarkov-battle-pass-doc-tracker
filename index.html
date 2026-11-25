@@ -1348,15 +1348,18 @@
     function extractSeasonName(doc) {
       const candidates = [];
 
-      if (doc.title) candidates.push(doc.title);
+      // 위키 제목의 [edit] 링크가 "[]" 또는 "[edit]"로 텍스트에 섞이므로 대괄호 부분을 제거한다.
+      const stripBrackets = s => s.replace(/\[[^\]]*\]/g, "").replace(/\s+/g, " ").trim();
+
+      if (doc.title) candidates.push(stripBrackets(doc.title));
 
       // div는 목차(1.1 Progression ...)까지 통째로 포함하므로 후보에서 제외한다.
       doc.querySelectorAll("h1, h2, h3, h4, .mw-parser-output p").forEach(el => {
-        const text = cleanText(el);
+        const text = stripBrackets(cleanText(el));
         if (text) candidates.push(text);
       });
 
-      candidates.push((doc.body?.innerText || "").replace(/\s+/g, " "));
+      candidates.push(stripBrackets((doc.body?.innerText || doc.body?.textContent || "")));
 
       // 예: Season 1 - "KORD BREACH"  /  Season 1 - KORD BREACH
       for (const candidate of candidates) {
